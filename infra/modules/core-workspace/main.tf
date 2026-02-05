@@ -17,7 +17,7 @@ resource "null_resource" "core_workspace" {
   triggers = {
     workspace_name = var.workspace_name
   }
-  
+
   # Provisioning would happen here via Azure CLI, REST API, or future provider
 }
 
@@ -25,12 +25,12 @@ resource "null_resource" "core_workspace" {
 # Configure Git sync for notebooks, pipelines, and other artifacts
 resource "null_resource" "git_integration" {
   count = var.git_integration_enabled ? 1 : 0
-  
+
   triggers = {
     workspace_id = null_resource.core_workspace.id
     git_repo     = var.git_repo_url
   }
-  
+
   # Git integration setup would happen here
 }
 
@@ -38,10 +38,10 @@ resource "null_resource" "git_integration" {
 # Set up dbt profiles and connection to Fabric
 resource "null_resource" "dbt_setup" {
   count = var.dbt_enabled ? 1 : 0
-  
+
   triggers = {
     workspace_id = null_resource.core_workspace.id
   }
-  
+
   # dbt configuration would happen here
 }

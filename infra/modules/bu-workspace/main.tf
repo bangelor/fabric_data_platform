@@ -9,7 +9,7 @@ resource "null_resource" "bu_workspace" {
   triggers = {
     workspace_name = var.workspace_name
   }
-  
+
   # Provisioning would happen here via Azure CLI, REST API, or future provider
 }
 
@@ -20,7 +20,7 @@ resource "null_resource" "core_workspace_access" {
     bu_workspace_id   = null_resource.bu_workspace.id
     core_workspace_id = var.core_workspace_id
   }
-  
+
   # Access configuration would happen here
   # - Read access to certified models in core workspace
   # - Connection to core data lakehouse
