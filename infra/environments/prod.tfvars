@@ -1,7 +1,7 @@
 # Production Environment Configuration
 
 environment         = "prod"
-resource_group_name = "rg-fabric-prod"
+resource_group_name = "lbn-rg-fabric-prod"
 location            = "eastus"
 
 core_workspace_name = "fabric-core-prod"

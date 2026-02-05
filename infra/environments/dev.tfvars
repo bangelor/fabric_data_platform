@@ -1,7 +1,7 @@
 # Development Environment Configuration
 
 environment         = "dev"
-resource_group_name = "rg-fabric-dev"
+resource_group_name = "lbn-rg-fabric-dev"
 location            = "eastus"
 
 core_workspace_name = "fabric-core-dev"
