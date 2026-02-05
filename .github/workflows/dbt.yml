@@ -1,0 +1,178 @@
+name: dbt CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'dbt/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'dbt/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  DBT_VERSION: '1.7.0'
+  WORKING_DIR: './dbt'
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write  # Required for Azure OIDC authentication
+
+jobs:
+  dbt-test:
+    name: dbt Test & Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt and dependencies
+        run: |
+          pip install dbt-core==${{ env.DBT_VERSION }}
+          pip install dbt-fabric
+          pip install sqlfluff
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: dbt Debug
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt debug --target dev
+
+      - name: dbt Lint (sqlfluff)
+        working-directory: ${{ env.WORKING_DIR }}
+        run: sqlfluff lint models/
+
+      - name: dbt Compile
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt compile --target dev
+
+      - name: dbt Test
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt test --target dev
+
+  dbt-run-dev:
+    name: dbt Run (Dev)
+    needs: dbt-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: dev
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: |
+          pip install dbt-core==${{ env.DBT_VERSION }}
+          pip install dbt-fabric
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: dbt Run
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt run --target dev
+
+      - name: dbt Test
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt test --target dev
+
+      - name: Generate dbt Docs
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt docs generate --target dev
+
+      - name: Upload dbt Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-artifacts-dev
+          path: |
+            ${{ env.WORKING_DIR }}/target/manifest.json
+            ${{ env.WORKING_DIR }}/target/catalog.json
+            ${{ env.WORKING_DIR }}/target/run_results.json
+          retention-days: 30
+
+  dbt-run-prod:
+    name: dbt Run (Production)
+    needs: dbt-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: prod
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: |
+          pip install dbt-core==${{ env.DBT_VERSION }}
+          pip install dbt-fabric
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: dbt Run (Full Refresh for Marts)
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt run --target prod --select marts --full-refresh
+
+      - name: dbt Test
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt test --target prod
+
+      - name: Generate dbt Docs
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt docs generate --target prod
+
+      - name: Upload dbt Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-artifacts-prod
+          path: |
+            ${{ env.WORKING_DIR }}/target/manifest.json
+            ${{ env.WORKING_DIR }}/target/catalog.json
+            ${{ env.WORKING_DIR }}/target/run_results.json
+          retention-days: 90

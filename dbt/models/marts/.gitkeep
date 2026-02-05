@@ -1,0 +1,7 @@
+# Marts Models - Certified for BU Consumption
+# These are the final, certified models that business units will consume
+# All models in this directory should be:
+# - Well-tested
+# - Documented
+# - Certified by data governance
+# - Optimized for query performance
