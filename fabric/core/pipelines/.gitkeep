@@ -1,0 +1,6 @@
+# Fabric Data Pipelines
+# Synced via Git integration from core workspace
+# Contains orchestration pipelines for:
+# - Scheduled data loads
+# - ETL/ELT processes
+# - Data workflow coordination
