@@ -3,7 +3,9 @@
 provider "azurerm" {
   features {}
   
-  # Subscription and tenant settings
-  # subscription_id = var.subscription_id
-  # tenant_id       = var.tenant_id
+  # Use OIDC authentication for GitHub Actions
+  use_oidc = true
+  
+  # These will be set via environment variables:
+  # ARM_CLIENT_ID, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID, ARM_USE_OIDC
 }
