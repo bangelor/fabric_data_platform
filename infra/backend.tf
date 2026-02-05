@@ -7,6 +7,5 @@ terraform {
     storage_account_name = "lbntfstate"
     container_name       = "tfstate"
     key                  = "fabric-data-platform.tfstate"
-    
   }
 }
