@@ -182,11 +182,11 @@ if [ "$SETUP_FABRIC" = "y" ]; then
         FABRIC_CAPACITY_ID=$(echo "$FABRIC_CAPACITY_JSON" | jq -r '.id')
         print_message "Fabric Capacity ID: $FABRIC_CAPACITY_ID"
         
-        # Assign Contributor role to Fabric Capacity
-        print_message "Assigning Contributor role to Fabric Capacity..."
+        # Assign Owner role to Fabric Capacity (required for Fabric API operations)
+        print_message "Assigning Owner role to Fabric Capacity..."
         az role assignment create \
             --assignee "$SP_ID" \
-            --role "Contributor" \
+            --role "Owner" \
             --scope "$FABRIC_CAPACITY_ID" \
             2>/dev/null || print_warning "Role assignment may already exist"
         
@@ -431,7 +431,7 @@ Resource Group:      $FABRIC_RG
 Capacity Name:       $FABRIC_CAPACITY
 Capacity ID:         $FABRIC_CAPACITY_ID
 
-Role Assignment:     Contributor (Fabric Capacity scope)
+Role Assignment:     Owner (Fabric Capacity scope)
 Admin Member:        ✓ Service Principal added as Fabric Capacity admin
 
 EOF
@@ -447,7 +447,7 @@ Fabric Capacity Configuration:
     Service Principal Object ID: $SP_ID
     
     1. Go to Azure Portal > Fabric Capacity > Access Control (IAM)
-    2. Add role assignment: Contributor
+    2. Add role assignment: Owner
     3. Assign to: $APP_NAME
     4. Also add as admin member via Azure CLI or Portal
 
@@ -473,8 +473,8 @@ Fabric Capacity Configuration:
        FABRIC_JSON=\$(az fabric capacity show -g "\$FABRIC_RG" -n "\$FABRIC_CAPACITY" -o json)
        FABRIC_ID=\$(echo "\$FABRIC_JSON" | jq -r '.id')
        
-       # Assign Contributor
-       az role assignment create --assignee "\$SP_ID" --role Contributor --scope "\$FABRIC_ID"
+       # Assign Owner role (required for Fabric API operations)
+       az role assignment create --assignee "\$SP_ID" --role Owner --scope "\$FABRIC_ID"
        
        # Add as admin member
        MEMBERS=\$(echo "\$FABRIC_JSON" | jq -c ".administration.members += [\"\$SP_ID\"] | .administration")
