@@ -116,6 +116,45 @@ az role assignment create \
     --scope "/subscriptions/$SUBSCRIPTION_ID" \
     2>/dev/null || print_warning "Role assignment may already exist"
 
+# Setup Terraform State Storage Access
+print_message ""
+print_message "=== Terraform State Storage Configuration ==="
+read -p "Do you want to configure access to Terraform state storage? (y/n): " SETUP_STORAGE
+
+if [ "$SETUP_STORAGE" = "y" ]; then
+    # Prompt for storage details (with defaults from backend.tf)
+    read -p "Enter storage account resource group name [lbn-tf-state]: " STORAGE_RG
+    STORAGE_RG=${STORAGE_RG:-lbn-tf-state}
+    
+    read -p "Enter storage account name [lbntfstate]: " STORAGE_ACCOUNT
+    STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-lbntfstate}
+    
+    read -p "Enter storage container name [tfstate]: " STORAGE_CONTAINER
+    STORAGE_CONTAINER=${STORAGE_CONTAINER:-tfstate}
+    
+    print_message "Checking if storage account exists..."
+    if az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$STORAGE_RG" &> /dev/null; then
+        STORAGE_SCOPE="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
+        
+        print_message "Assigning Storage Blob Data Contributor role..."
+        az role assignment create \
+            --assignee "$APP_ID" \
+            --role "Storage Blob Data Contributor" \
+            --scope "$STORAGE_SCOPE" \
+            2>/dev/null || print_warning "Storage role assignment may already exist"
+        
+        print_message "✓ Storage account access configured for Terraform state"
+        STORAGE_SETUP_DONE=true
+    else
+        print_warning "Storage account '$STORAGE_ACCOUNT' not found in resource group '$STORAGE_RG'."
+        print_warning "Create it first or the workflow will fail during 'terraform init'."
+        STORAGE_SETUP_DONE=false
+    fi
+else
+    print_warning "Skipping storage setup. Ensure the service principal has access to the state storage."
+    STORAGE_SETUP_DONE=false
+fi
+
 # Setup Fabric Capacity Admin
 print_message ""
 print_message "=== Fabric Capacity Configuration ==="
@@ -314,6 +353,74 @@ Role Assignment:     Contributor (subscription scope)
 
 EOF
 
+if [ "${STORAGE_SETUP_DONE:-false}" = "true" ]; then
+cat >> "$OUTPUT_FILE" <<EOF
+=============================================================================
+Terraform State Storage Configuration:
+=============================================================================
+
+Resource Group:      $STORAGE_RG
+Storage Account:     $STORAGE_ACCOUNT
+Container:           $STORAGE_CONTAINER
+
+Role Assignment:     ✓ Storage Blob Data Contributor
+
+EOF
+elif [ "$SETUP_STORAGE" = "y" ]; then
+cat >> "$OUTPUT_FILE" <<EOF
+=============================================================================
+Terraform State Storage Configuration:
+=============================================================================
+
+⚠️  Storage account not found. You must create it before running Terraform:
+
+   az storage account create \\
+     --name $STORAGE_ACCOUNT \\
+     --resource-group $STORAGE_RG \\
+     --location eastus \\
+     --sku Standard_LRS \\
+     --encryption-services blob
+   
+   az storage container create \\
+     --name $STORAGE_CONTAINER \\
+     --account-name $STORAGE_ACCOUNT
+   
+   # Then assign permissions:
+   az role assignment create \\
+     --assignee "$APP_ID" \\
+     --role "Storage Blob Data Contributor" \\
+     --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
+
+EOF
+else
+cat >> "$OUTPUT_FILE" <<EOF
+=============================================================================
+Terraform State Storage Configuration:
+=============================================================================
+
+⚠️  Storage setup was skipped. Ensure backend storage exists and is accessible:
+
+   1. Create storage account (if needed):
+      az storage account create \\
+        --name <storage-account-name> \\
+        --resource-group <resource-group> \\
+        --location eastus \\
+        --sku Standard_LRS
+   
+   2. Create container:
+      az storage container create \\
+        --name tfstate \\
+        --account-name <storage-account-name>
+   
+   3. Assign permissions:
+      az role assignment create \\
+        --assignee "$APP_ID" \\
+        --role "Storage Blob Data Contributor" \\
+        --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/<rg>/providers/Microsoft.Storage/storageAccounts/<storage-account>"
+
+EOF
+fi
+
 if [ "${FABRIC_SETUP_DONE:-false}" = "true" ]; then
 cat >> "$OUTPUT_FILE" <<EOF
 =============================================================================
@@ -377,27 +484,6 @@ EOF
 fi
 
 cat >> "$OUTPUT_FILE" <<EOF
-=============================================================================
-Backend State Storage Setup (Optional):
-=============================================================================
-
-To configure Terraform remote state in Azure Storage:
-
-1. Create a storage account:
-   az storage account create \\
-     --name stterraformstate\$RANDOM \\
-     --resource-group rg-terraform-state \\
-     --location eastus \\
-     --sku Standard_LRS \\
-     --encryption-services blob
-
-2. Create a container:
-   az storage container create \\
-     --name tfstate \\
-     --account-name <storage_account_name>
-
-3. Update infra/backend.tf with the storage account details
-
 =============================================================================
 Next Steps:
 =============================================================================
