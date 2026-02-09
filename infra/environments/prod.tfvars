@@ -9,7 +9,8 @@ core_workspace_name = "fabric-core-prod"
 # Fabric capacity configuration
 # Get the capacity ID by running: az fabric capacity show --name fabric101 --resource-group <rg-name> --query id -o tsv
 # Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Fabric/capacities/fabric101
-fabric_capacity_id = ""  # TODO: Add your Fabric Capacity full resource ID here
+# TODO: Add your Fabric Capacity full resource ID here
+fabric_capacity_id = ""
 
 # Git Integration Configuration
 git_integration_enabled = true

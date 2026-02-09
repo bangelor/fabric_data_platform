@@ -434,6 +434,16 @@ Capacity ID:         $FABRIC_CAPACITY_ID
 Role Assignment:     Owner (Fabric Capacity scope)
 Admin Member:        ✓ Service Principal added as Fabric Capacity admin
 
+⚠️  IMPORTANT: Update your Terraform tfvars files!
+    
+    Add the following to ALL environment tfvars files:
+    (infra/environments/dev.tfvars, test.tfvars, prod.tfvars)
+    
+    fabric_capacity_id = "$FABRIC_CAPACITY_ID"
+    
+    This is required because Terraform now uses direct capacity ID
+    instead of looking up by name (avoiding list permission requirements).
+
 EOF
 elif [ "$SETUP_FABRIC" = "y" ]; then
 cat >> "$OUTPUT_FILE" <<EOF
@@ -450,6 +460,13 @@ Fabric Capacity Configuration:
     2. Add role assignment: Owner
     3. Assign to: $APP_NAME
     4. Also add as admin member via Azure CLI or Portal
+    
+    Once configured, get the Fabric Capacity ID and add to your tfvars:
+    
+    FABRIC_ID=\$(az fabric capacity show -g "$FABRIC_RG" -n "$FABRIC_CAPACITY" --query id -o tsv)
+    
+    Then update ALL environment tfvars files with:
+    fabric_capacity_id = "\$FABRIC_ID"
 
 EOF
 else
@@ -473,25 +490,57 @@ Fabric Capacity Configuration:
        FABRIC_JSON=\$(az fabric capacity show -g "\$FABRIC_RG" -n "\$FABRIC_CAPACITY" -o json)
        FABRIC_ID=\$(echo "\$FABRIC_JSON" | jq -r '.id')
        
-       # Assign Owner role (required for Fabric API operations)
+       # Assign Owner role (required for Fabric OIDC operations)
        az role assignment create --assignee "\$SP_ID" --role Owner --scope "\$FABRIC_ID"
        
        # Add as admin member
        MEMBERS=\$(echo "\$FABRIC_JSON" | jq -c ".administration.members += [\"\$SP_ID\"] | .administration")
        az fabric capacity update -g "\$FABRIC_RG" -n "\$FABRIC_CAPACITY" --administration "\$MEMBERS"
+    
+    3. Update ALL environment tfvars files with capacity ID:
+       
+       fabric_capacity_id = "\$FABRIC_ID"
+       
+       This is required in: infra/environments/dev.tfvars, test.tfvars, prod.tfvars
 
 EOF
 fi
 
 cat >> "$OUTPUT_FILE" <<EOF
 =============================================================================
+Authentication Configuration Summary:
+=============================================================================
+
+Azure Resource Manager (ARM):
+  Provider:     azurerm
+  Auth Method:  OIDC (OpenID Connect)
+  Environment:  ARM_USE_OIDC=true
+                ARM_CLIENT_ID, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID
+
+Microsoft Fabric:
+  Provider:     fabric
+  Auth Method:  OIDC (OpenID Connect)
+  Environment:  FABRIC_USE_OIDC=true
+                FABRIC_CLIENT_ID, FABRIC_TENANT_ID
+  
+✓ No secrets or tokens needed - GitHub provides OIDC token automatically!
+✓ Workflow has 'id-token: write' permission for OIDC
+
+=============================================================================
 Next Steps:
 =============================================================================
 
 1. Add the secrets to your GitHub repository (see commands above)
-2. Configure Terraform backend for remote state (optional)
-3. Update infra/environments/*.tfvars with your environment values
+
+2. Update infra/environments/*.tfvars with Fabric Capacity ID:
+   - Get capacity ID: az fabric capacity show -g <rg> -n <capacity> --query id -o tsv
+   - Add to dev.tfvars, test.tfvars, prod.tfvars:
+     fabric_capacity_id = "/subscriptions/.../providers/Microsoft.Fabric/capacities/..."
+
+3. Configure Terraform backend for remote state (if not done)
+
 4. Push changes to GitHub to trigger CI/CD workflows
+
 5. Verify workflows run successfully in GitHub Actions
 
 =============================================================================
