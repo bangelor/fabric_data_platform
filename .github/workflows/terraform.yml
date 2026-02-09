@@ -10,11 +10,13 @@ on:
       - main
     paths:
       - 'infra/**'
+      - '.github/workflows/terraform.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'infra/**'
+      - '.github/workflows/terraform.yml'
   workflow_dispatch:
     inputs:
       environment:
@@ -140,7 +142,8 @@ jobs:
     name: Terraform Apply
     needs: terraform-plan
     runs-on: ubuntu-latest
-    # Only apply on main branch pushes or manual workflow dispatch
+    # Only apply on push to main (after PR merge) or manual workflow dispatch
+    # PRs will NOT trigger deployment - they only show plans
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     strategy:
       max-parallel: 1  # Deploy one environment at a time
