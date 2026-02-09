@@ -2,12 +2,12 @@
 
 output "workspace_id" {
   description = "ID of the core Fabric workspace"
-  value       = null_resource.core_workspace.id
+  value       = fabric_workspace.core.id
 }
 
 output "workspace_name" {
   description = "Name of the core Fabric workspace"
-  value       = var.workspace_name
+  value       = fabric_workspace.core.display_name
 }
 
 output "git_integration_enabled" {

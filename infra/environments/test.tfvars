@@ -1,10 +1,10 @@
-# Production Environment Configuration
+# Test Environment Configuration
 
-environment         = "prod"
-resource_group_name = "lbn-rg-fabric-prod"
+environment         = "test"
+resource_group_name = "lbn-rg-fabric-test"
 location            = "eastus"
 
-core_workspace_name = "fabric-core-prod"
+core_workspace_name = "fabric-core-test"
 
 # Fabric capacity configuration
 fabric_capacity_name = "fabric101"
@@ -15,27 +15,27 @@ git_provider_type       = "GitHub"
 git_owner_name          = "bangelor"
 git_repository_name     = "fabric_data_platform"
 git_branch_name         = "main"
-git_directory_name      = "/fabric/core-prod"
+git_directory_name      = "/fabric/core-test"
 git_credentials_source  = "Automatic"
 # git_connection_id     = ""  # Only needed if using ConfiguredConnection
 
 bu_workspaces = {
   finance = {
-    name        = "fabric-finance-prod"
-    description = "Finance Business Unit workspace - Production"
+    name        = "fabric-finance-test"
+    description = "Finance Business Unit workspace - Test"
   }
   sales = {
-    name        = "fabric-sales-prod"
-    description = "Sales Business Unit workspace - Production"
+    name        = "fabric-sales-test"
+    description = "Sales Business Unit workspace - Test"
   }
   marketing = {
-    name        = "fabric-marketing-prod"
-    description = "Marketing Business Unit workspace - Production"
+    name        = "fabric-marketing-test"
+    description = "Marketing Business Unit workspace - Test"
   }
 }
 
 tags = {
-  Environment = "Production"
+  Environment = "Test"
   ManagedBy   = "Terraform"
   Project     = "FabricDataPlatform"
 }

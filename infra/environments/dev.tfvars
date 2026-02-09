@@ -6,6 +6,19 @@ location            = "eastus"
 
 core_workspace_name = "fabric-core-dev"
 
+# Fabric capacity configuration
+fabric_capacity_name = "fabric101"
+
+# Git Integration Configuration
+git_integration_enabled = true
+git_provider_type       = "GitHub"
+git_owner_name          = "bangelor"
+git_repository_name     = "fabric_data_platform"
+git_branch_name         = "main"
+git_directory_name      = "/fabric/core-dev"
+git_credentials_source  = "Automatic"
+# git_connection_id     = ""  # Only needed if using ConfiguredConnection
+
 bu_workspaces = {
   finance = {
     name        = "fabric-finance-dev"
