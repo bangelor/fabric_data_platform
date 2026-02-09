@@ -158,6 +158,45 @@ az ad app federated-credential create \
         \"description\": \"GitHub Actions - Pull Requests\"
     }" 2>/dev/null || print_warning "Federated credential for pull requests may already exist"
 
+# 4. Dev Environment
+print_message "Creating federated credential for dev environment..."
+CRED_NAME_ENV_DEV="github-env-dev"
+az ad app federated-credential create \
+    --id "$OBJECT_ID" \
+    --parameters "{
+        \"name\": \"$CRED_NAME_ENV_DEV\",
+        \"issuer\": \"https://token.actions.githubusercontent.com\",
+        \"subject\": \"repo:$GITHUB_ORG/$GITHUB_REPO:environment:dev\",
+        \"audiences\": [\"api://AzureADTokenExchange\"],
+        \"description\": \"GitHub Actions - Dev Environment\"
+    }" 2>/dev/null || print_warning "Federated credential for dev environment may already exist"
+
+# 5. Prod Environment
+print_message "Creating federated credential for prod environment..."
+CRED_NAME_ENV_PROD="github-env-prod"
+az ad app federated-credential create \
+    --id "$OBJECT_ID" \
+    --parameters "{
+        \"name\": \"$CRED_NAME_ENV_PROD\",
+        \"issuer\": \"https://token.actions.githubusercontent.com\",
+        \"subject\": \"repo:$GITHUB_ORG/$GITHUB_REPO:environment:prod\",
+        \"audiences\": [\"api://AzureADTokenExchange\"],
+        \"description\": \"GitHub Actions - Prod Environment\"
+    }" 2>/dev/null || print_warning "Federated credential for prod environment may already exist"
+
+# 6. Test Environment
+print_message "Creating federated credential for test environment..."
+CRED_NAME_ENV_TEST="github-env-test"
+az ad app federated-credential create \
+    --id "$OBJECT_ID" \
+    --parameters "{
+        \"name\": \"$CRED_NAME_ENV_TEST\",
+        \"issuer\": \"https://token.actions.githubusercontent.com\",
+        \"subject\": \"repo:$GITHUB_ORG/$GITHUB_REPO:environment:test\",
+        \"audiences\": [\"api://AzureADTokenExchange\"],
+        \"description\": \"GitHub Actions - Test Environment\"
+    }" 2>/dev/null || print_warning "Federated credential for test environment may already exist"
+
 # Create output file
 OUTPUT_FILE="github-secrets.txt"
 print_message "Creating output file: $OUTPUT_FILE"
@@ -196,9 +235,12 @@ How to add secrets to GitHub:
 Federated Credentials Created:
 =============================================================================
 
-✓ Main branch (Production):    repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main
-✓ Develop branch (Development): repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/develop
-✓ Pull Requests:                repo:$GITHUB_ORG/$GITHUB_REPO:pull_request
+✓ Main branch:        repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main
+✓ Develop branch:     repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/develop
+✓ Pull Requests:      repo:$GITHUB_ORG/$GITHUB_REPO:pull_request
+✓ Dev Environment:    repo:$GITHUB_ORG/$GITHUB_REPO:environment:dev
+✓ Test Environment:   repo:$GITHUB_ORG/$GITHUB_REPO:environment:test
+✓ Prod Environment:   repo:$GITHUB_ORG/$GITHUB_REPO:environment:prod
 
 =============================================================================
 Azure Resources Created:

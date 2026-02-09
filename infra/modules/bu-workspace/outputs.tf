@@ -2,12 +2,12 @@
 
 output "workspace_id" {
   description = "ID of the BU Fabric workspace"
-  value       = null_resource.bu_workspace.id
+  value       = fabric_workspace.bu.id
 }
 
 output "workspace_name" {
   description = "Name of the BU Fabric workspace"
-  value       = var.workspace_name
+  value       = fabric_workspace.bu.display_name
 }
 
 output "core_workspace_id" {

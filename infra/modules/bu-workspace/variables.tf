@@ -20,6 +20,12 @@ variable "core_workspace_id" {
   type        = string
 }
 
+variable "capacity_id" {
+  description = "ID of the existing Fabric capacity (optional)"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

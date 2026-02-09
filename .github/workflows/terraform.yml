@@ -1,5 +1,9 @@
 name: Terraform CI/CD
 
+# IMPORTANT: Production deployments require manual approval!
+# See .github/ENVIRONMENT_SETUP.md for instructions on configuring GitHub Environments
+# with required reviewers for the 'prod' environment.
+
 on:
   push:
     branches:
@@ -19,6 +23,7 @@ on:
         type: choice
         options:
           - dev
+          - test
           - prod
 
 env:
@@ -30,13 +35,17 @@ permissions:
   pull-requests: write
   id-token: write  # Required for Azure OIDC authentication
 
+concurrency:
+  group: terraform-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false  # Don't cancel in-progress deployments
+
 jobs:
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [dev, prod]
+        environment: [dev, test, prod]
     
     steps:
       - name: Checkout code
@@ -60,6 +69,9 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform init
 
@@ -74,6 +86,9 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
         run: terraform validate
 
       - name: Terraform Plan
@@ -83,12 +98,23 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
         run: |
           terraform plan \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
-            -out=${{ matrix.environment }}.tfplan
+            -out=${{ matrix.environment }}.tfplan \
+            -no-color | tee plan-${{ matrix.environment }}.txt
 
-      - name: Upload Plan
+      - name: Upload Plan Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-output-${{ matrix.environment }}
+          path: ${{ env.WORKING_DIR }}/plan-${{ matrix.environment }}.txt
+          retention-days: 5
+
+      - name: Upload Plan Binary
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ matrix.environment }}
@@ -101,12 +127,13 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/${{ matrix.environment }}.tfplan', 'utf8');
+            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/plan-${{ matrix.environment }}.txt', 'utf8');
+            const output = plan.length > 65000 ? plan.substring(0, 65000) + '\n... (truncated)' : plan;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## Terraform Plan - ${{ matrix.environment }}\n\`\`\`\n${plan}\n\`\`\``
+              body: `## Terraform Plan - ${{ matrix.environment }} 🌍\n\`\`\`terraform\n${output}\n\`\`\``
             })
 
   terraform-apply:
@@ -114,13 +141,13 @@ jobs:
     needs: terraform-plan
     runs-on: ubuntu-latest
     # Only apply on main branch pushes or manual workflow dispatch
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    environment:
-      name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'prod' }}
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     strategy:
+      max-parallel: 1  # Deploy one environment at a time
       matrix:
-        environment: 
-          - ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'prod' }}
+        environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.environment)) || fromJSON('["dev", "test"]') }}
+    environment:
+      name: ${{ matrix.environment }}
     
     steps:
       - name: Checkout code
@@ -151,6 +178,9 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
         run: terraform init
 
       - name: Terraform Apply
@@ -160,4 +190,65 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
         run: terraform apply -auto-approve ${{ matrix.environment }}.tfplan
+
+  terraform-apply-prod:
+    name: Terraform Apply Production
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    # ⚠️ PRODUCTION DEPLOYMENT - REQUIRES MANUAL APPROVAL ⚠️
+    # This job will pause and wait for approval from designated reviewers
+    # Configure in: GitHub Settings → Environments → prod → Required reviewers
+    # See .github/ENVIRONMENT_SETUP.md for detailed setup instructions
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
+    environment:
+      name: prod
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-prod
+          path: ${{ env.WORKING_DIR }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
+        run: terraform init
+
+      - name: Terraform Apply Production
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          FABRIC_USE_OIDC: true
+        run: terraform apply -auto-approve prod.tfplan
