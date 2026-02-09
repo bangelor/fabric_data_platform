@@ -36,8 +36,8 @@ variable "environment" {
   type        = string
 }
 
-variable "fabric_capacity_name" {
-  description = "Display name of the existing Fabric capacity to assign workspaces to (optional)"
+variable "fabric_capacity_id" {
+  description = "Full resource ID of the existing Fabric capacity to assign workspaces to (optional). Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Fabric/capacities/{capacityName}"
   type        = string
   default     = ""
 }

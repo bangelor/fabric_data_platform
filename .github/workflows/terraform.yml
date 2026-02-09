@@ -73,6 +73,9 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_USE_OIDC: true
+      FABRIC_USE_OIDC: true
+      FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     
     steps:
       - name: Checkout code
@@ -90,18 +93,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Get Fabric API Token
-        run: |
-          TOKEN=$(az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv)
-          echo "::add-mask::$TOKEN"
-          echo "FABRIC_TOKEN=$TOKEN" >> $GITHUB_ENV
-        shell: bash
-
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform init -backend-config="key=${{ matrix.environment }}.tfstate"
-        env:
-          FABRIC_TOKEN: ${{ env.FABRIC_TOKEN }}
 
       - name: Terraform Plan
         working-directory: ${{ env.WORKING_DIR }}
@@ -110,8 +104,6 @@ jobs:
           terraform plan \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
             -no-color | tee plan-${{ matrix.environment }}.txt
-        env:
-          FABRIC_TOKEN: ${{ env.FABRIC_TOKEN }}
 
       - name: Upload Plan Output
         uses: actions/upload-artifact@v4
@@ -177,6 +169,9 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_USE_OIDC: true
+      FABRIC_USE_OIDC: true
+      FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     
     steps:
       - name: Checkout code
@@ -194,18 +189,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Get Fabric API Token
-        run: |
-          TOKEN=$(az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv)
-          echo "::add-mask::$TOKEN"
-          echo "FABRIC_TOKEN=$TOKEN" >> $GITHUB_ENV
-        shell: bash
-
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform init -backend-config="key=${{ matrix.environment }}.tfstate"
-        env:
-          FABRIC_TOKEN: ${{ env.FABRIC_TOKEN }}
 
       - name: Terraform Apply
         working-directory: ${{ env.WORKING_DIR }}
@@ -213,5 +199,3 @@ jobs:
           terraform apply \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
             -auto-approve
-        env:
-          FABRIC_TOKEN: ${{ env.FABRIC_TOKEN }}

@@ -14,12 +14,6 @@ terraform {
   }
 }
 
-# Data source to reference existing Fabric capacity (if specified)
-data "fabric_capacity" "existing" {
-  count        = var.fabric_capacity_name != "" ? 1 : 0
-  display_name = var.fabric_capacity_name
-}
-
 # Core Workspace - Full-featured with Git, dbt, CI/CD
 module "core_workspace" {
   source = "./modules/core-workspace"
@@ -27,7 +21,7 @@ module "core_workspace" {
   workspace_name      = var.core_workspace_name
   resource_group_name = var.resource_group_name
   location            = var.location
-  capacity_id         = var.fabric_capacity_name != "" ? data.fabric_capacity.existing[0].id : null
+  capacity_id         = var.fabric_capacity_id != "" ? var.fabric_capacity_id : null
 
   # Git integration settings
   git_integration_enabled     = var.git_integration_enabled
@@ -58,7 +52,7 @@ module "bu_workspaces" {
   workspace_name      = each.value.name
   resource_group_name = var.resource_group_name
   location            = var.location
-  capacity_id         = var.fabric_capacity_name != "" ? data.fabric_capacity.existing[0].id : null
+  capacity_id         = var.fabric_capacity_id != "" ? var.fabric_capacity_id : null
 
   # Reference to core workspace for data consumption
   core_workspace_id = module.core_workspace.workspace_id

@@ -7,7 +7,9 @@ location            = "eastus"
 core_workspace_name = "fabric-core-test"
 
 # Fabric capacity configuration
-fabric_capacity_name = "fabric101"
+# Get the capacity ID by running: az fabric capacity show --name fabric101 --resource-group <rg-name> --query id -o tsv
+# Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Fabric/capacities/fabric101
+fabric_capacity_id = ""  # TODO: Add your Fabric Capacity full resource ID here
 
 # Git Integration Configuration
 git_integration_enabled = true
