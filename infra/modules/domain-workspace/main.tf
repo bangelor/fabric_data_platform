@@ -1,10 +1,4 @@
-# Domain Workspace Module - Simplified
-
-# Look up the Platform Admins group (created in dev environment)
-data "azuread_group" "platform_admins" {
-  display_name     = "lbn_SG-Fabric-Platform-Admins"
-  security_enabled = true
-}
+# Domain Workspace Module
 
 # Fabric Workspace for domain
 resource "fabric_workspace" "domain" {
@@ -17,7 +11,7 @@ resource "fabric_workspace" "domain" {
 resource "fabric_workspace_role_assignment" "admin" {
   workspace_id = fabric_workspace.domain.id
   principal = {
-    id   = data.azuread_group.platform_admins.object_id
+    id   = var.platform_admin_id
     type = "Group"
   }
   role = "Admin"

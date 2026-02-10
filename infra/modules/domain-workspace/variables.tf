@@ -9,3 +9,8 @@ variable "capacity_id" {
   description = "Fabric capacity UUID"
   type        = string
 }
+
+variable "platform_admin_id" {
+  description = "Object ID of the Platform Admin security group"
+  type        = string
+}

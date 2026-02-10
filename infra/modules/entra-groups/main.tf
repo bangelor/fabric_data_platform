@@ -1,8 +1,8 @@
 # Entra ID Security Groups for Fabric Data Platform
 
-# Platform Groups (created only in dev environment to avoid duplicates)
+# Platform Groups (created only in prod environment to avoid duplicates)
 resource "azuread_group" "platform_admins" {
-  count = var.environment == "dev" ? 1 : 0
+  count = var.environment == "prod" ? 1 : 0
 
   display_name     = "lbn_SG-Fabric-Platform-Admins"
   description      = "Fabric tenant administrators - operate the platform and manage all workspaces"
@@ -10,7 +10,7 @@ resource "azuread_group" "platform_admins" {
 }
 
 resource "azuread_group" "cicd_approvers" {
-  count = var.environment == "dev" ? 1 : 0
+  count = var.environment == "prod" ? 1 : 0
 
   display_name     = "lbn_SG-Fabric-CICD-Approvers"
   description      = "Approve CI/CD deployments to production"
