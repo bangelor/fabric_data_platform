@@ -10,7 +10,9 @@ resource "fabric_workspace" "domain" {
 # Assign Platform Admin security group as Workspace Admin
 resource "fabric_workspace_role_assignment" "admin" {
   workspace_id = fabric_workspace.domain.id
-  principal_id = var.platform_admin_group_id
-  principal_type = "Group"
-  role         = "Admin"
+  principal = {
+    id   = var.platform_admin_group_id
+    type = "Group"
+  }
+  role = "Admin"
 }
