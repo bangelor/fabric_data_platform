@@ -83,20 +83,10 @@ variable "git_initialization_strategy" {
   }
 }
 
-variable "git_credentials_source" {
-  description = "Git credentials source (Automatic or ConfiguredConnection)"
-  type        = string
-  default     = "Automatic"
-  validation {
-    condition     = contains(["Automatic", "ConfiguredConnection"], var.git_credentials_source)
-    error_message = "git_credentials_source must be either 'Automatic' or 'ConfiguredConnection'."
-  }
-}
-
 variable "git_connection_id" {
-  description = "Git connection ID (required when git_credentials_source is ConfiguredConnection)"
+  description = "Git connection ID - REQUIRED for GitHub. Create connection in Fabric Portal: Settings > Git integration > Connect"
   type        = string
-  default     = null
+  default     = ""
 }
 
 variable "dbt_enabled" {

@@ -11,10 +11,12 @@ provider "azurerm" {
 }
 
 provider "fabric" {
-  # Use OIDC authentication for GitHub Actions
+  # Use OIDC authentication for GitHub Actions (no token needed!)
   use_oidc = true
-  preview = true
 
   # These will be set via environment variables:
-  # FABRIC_TENANT_ID, FABRIC_CLIENT_ID, FABRIC_USE_OIDC
+  # FABRIC_USE_OIDC, FABRIC_CLIENT_ID, FABRIC_TENANT_ID
+  # GitHub Actions automatically provides OIDC token when id-token: write permission is set
+
+  preview = true
 }

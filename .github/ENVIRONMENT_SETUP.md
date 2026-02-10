@@ -60,7 +60,7 @@ For **dev** and **test** environments, you can optionally add:
 ## How It Works
 
 ### Automatic Deployment (Dev & Test)
-When you push to `main` branch:
+When you push to `main` branch (merge a PR):
 ```
 Push to main → Plan all envs → Auto-deploy dev → Auto-deploy test
 ```
@@ -68,9 +68,9 @@ Push to main → Plan all envs → Auto-deploy dev → Auto-deploy test
 ### Manual Deployment (Production)
 To deploy to production:
 ```
-1. Go to Actions → Terraform CI/CD
+1. Go to Actions → "Deploy to Production"
 2. Click "Run workflow"
-3. Select environment: "prod"
+3. Type "deploy-prod" in the confirmation field
 4. Click "Run workflow"
 5. ⚠️ WAIT for approval notification
 6. Reviewer approves deployment

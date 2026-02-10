@@ -22,7 +22,7 @@ resource "fabric_workspace_git" "core" {
     repository_name   = var.git_repository_name
     branch_name       = var.git_branch_name
     directory_name    = var.git_directory_name
-  } : {
+    } : {
     git_provider_type = "GitHub"
     owner_name        = var.git_owner_name
     repository_name   = var.git_repository_name
@@ -30,9 +30,8 @@ resource "fabric_workspace_git" "core" {
     directory_name    = var.git_directory_name
   }
 
-  git_credentials = var.git_credentials_source == "Automatic" ? {
-    source = "Automatic"
-  } : {
+  # GitHub only supports ConfiguredConnection
+  git_credentials = {
     source        = "ConfiguredConnection"
     connection_id = var.git_connection_id
   }

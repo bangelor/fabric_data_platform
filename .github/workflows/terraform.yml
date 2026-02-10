@@ -1,8 +1,11 @@
 name: Terraform CI/CD
 
-# IMPORTANT: Production deployments require manual approval!
-# See .github/ENVIRONMENT_SETUP.md for instructions on configuring GitHub Environments
-# with required reviewers for the 'prod' environment.
+# WORKFLOW BEHAVIOR:
+# - Pull Request: Plans all environments, posts single aggregated comment
+# - Push to main: Auto-deploys dev & test only
+# - Manual prod deployment: Use "Deploy to Production" workflow instead
+#
+# CRITICAL: Each environment uses separate state files (dev.tfstate, test.tfstate, prod.tfstate)
 
 on:
   push:
@@ -17,16 +20,6 @@ on:
     paths:
       - 'infra/**'
       - '.github/workflows/terraform.yml'
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        type: choice
-        options:
-          - dev
-          - test
-          - prod
 
 env:
   TF_VERSION: '1.7.0'
@@ -35,19 +28,54 @@ env:
 permissions:
   contents: read
   pull-requests: write
-  id-token: write  # Required for Azure OIDC authentication
+  id-token: write
 
 concurrency:
   group: terraform-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false  # Don't cancel in-progress deployments
+  cancel-in-progress: false
 
 jobs:
+  terraform-lint:
+    name: Terraform Lint & Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init (validation only)
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform validate
+
   terraform-plan:
     name: Terraform Plan
+    needs: terraform-lint
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     strategy:
       matrix:
         environment: [dev, test, prod]
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
+      FABRIC_USE_OIDC: true
+      FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     
     steps:
       - name: Checkout code
@@ -66,47 +94,15 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
         working-directory: ${{ env.WORKING_DIR }}
-        run: terraform init
-
-      - name: Terraform Format Check
-        working-directory: ${{ env.WORKING_DIR }}
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        working-directory: ${{ env.WORKING_DIR }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
-        run: terraform validate
+        run: terraform init -backend-config="key=${{ matrix.environment }}.tfstate"
 
       - name: Terraform Plan
         working-directory: ${{ env.WORKING_DIR }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
         run: |
+          set -o pipefail
           terraform plan \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
-            -out=${{ matrix.environment }}.tfplan \
             -no-color | tee plan-${{ matrix.environment }}.txt
 
       - name: Upload Plan Output
@@ -116,41 +112,66 @@ jobs:
           path: ${{ env.WORKING_DIR }}/plan-${{ matrix.environment }}.txt
           retention-days: 5
 
-      - name: Upload Plan Binary
-        uses: actions/upload-artifact@v4
+  terraform-plan-comment:
+    name: Comment PR with Plans
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Download All Plan Outputs
+        uses: actions/download-artifact@v4
         with:
-          name: tfplan-${{ matrix.environment }}
-          path: ${{ env.WORKING_DIR }}/${{ matrix.environment }}.tfplan
-          retention-days: 5
+          pattern: tfplan-output-*
+          path: plans/
 
-      - name: Comment PR with Plan
-        if: github.event_name == 'pull_request'
+      - name: Aggregate and Comment on PR
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/plan-${{ matrix.environment }}.txt', 'utf8');
-            const output = plan.length > 65000 ? plan.substring(0, 65000) + '\n... (truncated)' : plan;
+            const environments = ['dev', 'test', 'prod'];
+            let comment = '## Terraform Plans 🌍\n\n';
+            
+            for (const env of environments) {
+              try {
+                const planPath = `plans/tfplan-output-${env}/plan-${env}.txt`;
+                let plan = fs.readFileSync(planPath, 'utf8');
+                if (plan.length > 20000) {
+                  plan = plan.substring(0, 20000) + '\n... (truncated)';
+                }
+                comment += `<details>\n<summary><b>${env.toUpperCase()}</b> Environment</summary>\n\n\`\`\`terraform\n${plan}\n\`\`\`\n</details>\n\n`;
+              } catch (error) {
+                comment += `<details>\n<summary><b>${env.toUpperCase()}</b> Environment</summary>\n\n❌ Plan not available\n</details>\n\n`;
+              }
+            }
+            
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## Terraform Plan - ${{ matrix.environment }} 🌍\n\`\`\`terraform\n${output}\n\`\`\``
-            })
+              body: comment
+            });
 
   terraform-apply:
     name: Terraform Apply
-    needs: terraform-plan
+    needs: terraform-lint
     runs-on: ubuntu-latest
-    # Only apply on push to main (after PR merge) or manual workflow dispatch
-    # PRs will NOT trigger deployment - they only show plans
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     strategy:
-      max-parallel: 1  # Deploy one environment at a time
+      max-parallel: 1
       matrix:
-        environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.environment)) || fromJSON('["dev", "test"]') }}
+        environment: [dev, test]
     environment:
       name: ${{ matrix.environment }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
+      FABRIC_USE_OIDC: true
+      FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     
     steps:
       - name: Checkout code
@@ -168,90 +189,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-${{ matrix.environment }}
-          path: ${{ env.WORKING_DIR }}
-
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
-        run: terraform init
+        run: terraform init -backend-config="key=${{ matrix.environment }}.tfstate"
 
       - name: Terraform Apply
         working-directory: ${{ env.WORKING_DIR }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
-        run: terraform apply -auto-approve ${{ matrix.environment }}.tfplan
-
-  terraform-apply-prod:
-    name: Terraform Apply Production
-    needs: terraform-plan
-    runs-on: ubuntu-latest
-    # ⚠️ PRODUCTION DEPLOYMENT - REQUIRES MANUAL APPROVAL ⚠️
-    # This job will pause and wait for approval from designated reviewers
-    # Configure in: GitHub Settings → Environments → prod → Required reviewers
-    # See .github/ENVIRONMENT_SETUP.md for detailed setup instructions
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
-    environment:
-      name: prod
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Azure Login with OIDC
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-prod
-          path: ${{ env.WORKING_DIR }}
-
-      - name: Terraform Init
-        working-directory: ${{ env.WORKING_DIR }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
-        run: terraform init
-
-      - name: Terraform Apply Production
-        working-directory: ${{ env.WORKING_DIR }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true
-          FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          FABRIC_USE_OIDC: true
-        run: terraform apply -auto-approve prod.tfplan
+        run: |
+          terraform apply \
+            -var-file="environments/${{ matrix.environment }}.tfvars" \
+            -auto-approve

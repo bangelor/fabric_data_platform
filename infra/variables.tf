@@ -36,8 +36,8 @@ variable "environment" {
   type        = string
 }
 
-variable "fabric_capacity_name" {
-  description = "Display name of the existing Fabric capacity to assign workspaces to (optional)"
+variable "fabric_capacity_id" {
+  description = "Full resource ID of the existing Fabric capacity to assign workspaces to (optional). Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Fabric/capacities/{capacityName}"
   type        = string
   default     = ""
 }
@@ -97,14 +97,8 @@ variable "git_initialization_strategy" {
   default     = "PreferWorkspace"
 }
 
-variable "git_credentials_source" {
-  description = "Git credentials source (Automatic or ConfiguredConnection)"
-  type        = string
-  default     = "Automatic"
-}
-
 variable "git_connection_id" {
-  description = "Git connection ID (required when git_credentials_source is ConfiguredConnection)"
+  description = "Git connection ID - REQUIRED for GitHub. Create in Fabric Portal under workspace Settings > Git integration"
   type        = string
-  default     = null
+  default     = ""
 }
