@@ -11,7 +11,18 @@ terraform {
       source  = "microsoft/fabric"
       version = ">= 0.1.0"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
   }
+}
+
+# Entra Security Groups
+module "entra_groups" {
+  source = "./modules/entra-groups"
+
+  business_domains = var.business_domains
 }
 
 # Core Workspaces (dev, test, prod)
@@ -19,15 +30,15 @@ module "core_workspace" {
   source   = "./modules/core-workspace"
   for_each = toset(["dev", "test", "prod"])
 
-  workspace_name = "fabric-core-${each.key}"
-  environment    = each.key
+  workspace_name = "fabric-core-${each.value}"
+  environment    = each.value
   capacity_id    = var.fabric_capacity_id
 }
 
-# Business Unit Workspace (prod only)
-module "business_workspace" {
-  source = "./modules/bu-workspace"
+# Domain Workspace (prod only)
+module "domain_workspace" {
+  source = "./modules/domain-workspace"
 
-  workspace_name = "fabric-business-prod"
+  workspace_name = "fabric-domain-prod"
   capacity_id    = var.fabric_capacity_id
 }

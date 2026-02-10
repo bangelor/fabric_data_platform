@@ -1,7 +1,7 @@
-# Business Unit Workspace Module Variables
+# Domain Workspace Module Variables
 
 variable "workspace_name" {
-  description = "Name of the BU Fabric workspace"
+  description = "Name of the domain workspace"
   type        = string
 }
 
