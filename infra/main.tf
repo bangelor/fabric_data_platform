@@ -14,50 +14,20 @@ terraform {
   }
 }
 
-# Core Workspace - Full-featured with Git, dbt, CI/CD
+# Core Workspaces (dev, test, prod)
 module "core_workspace" {
-  source = "./modules/core-workspace"
+  source   = "./modules/core-workspace"
+  for_each = toset(["dev", "test", "prod"])
 
-  workspace_name      = var.core_workspace_name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  capacity_id         = var.fabric_capacity_id != "" ? var.fabric_capacity_id : null
-
-  # Git integration settings
-  git_integration_enabled     = var.git_integration_enabled
-  git_provider_type           = var.git_provider_type
-  git_organization_name       = var.git_organization_name
-  git_project_name            = var.git_project_name
-  git_owner_name              = var.git_owner_name
-  git_repository_name         = var.git_repository_name
-  git_branch_name             = var.git_branch_name
-  git_directory_name          = var.git_directory_name
-  git_initialization_strategy = var.git_initialization_strategy
-  git_connection_id           = var.git_connection_id
-
-  # dbt settings
-  dbt_enabled = true
-
-  tags = merge(var.tags, {
-    WorkspaceType = "Core"
-  })
+  workspace_name = "fabric-core-${each.key}"
+  environment    = each.key
+  capacity_id    = var.fabric_capacity_id
 }
 
-# Business Unit Workspaces - Lightweight consumption only
-module "bu_workspaces" {
-  source   = "./modules/bu-workspace"
-  for_each = var.bu_workspaces
+# Business Unit Workspace (prod only)
+module "business_workspace" {
+  source = "./modules/bu-workspace"
 
-  workspace_name      = each.value.name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  capacity_id         = var.fabric_capacity_id != "" ? var.fabric_capacity_id : null
-
-  # Reference to core workspace for data consumption
-  core_workspace_id = module.core_workspace.workspace_id
-
-  tags = merge(var.tags, {
-    WorkspaceType = "BusinessUnit"
-    BusinessUnit  = each.key
-  })
+  workspace_name = "fabric-business-prod"
+  capacity_id    = var.fabric_capacity_id
 }

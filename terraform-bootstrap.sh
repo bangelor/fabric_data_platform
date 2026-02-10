@@ -108,6 +108,31 @@ else
     print_message "Service Principal already exists with ID: $SP_ID"
 fi
 
+# Add Power BI Service API permissions (required for Fabric)
+print_message "Adding Power BI Service API permissions to App Registration..."
+
+# Get Power BI Service API ID
+POWERBI_API_ID=$(az ad sp list --filter "displayName eq 'Power BI Service'" --query "[0].appId" -o tsv 2>/dev/null)
+
+if [ -n "$POWERBI_API_ID" ]; then
+    print_message "Found Power BI Service API: $POWERBI_API_ID"
+    
+    # Add Tenant.ReadWrite.All (Application permission)
+    # ID: b2f1b2fa-f35c-407c-979c-a858a808ba85
+    az ad app permission add \
+        --id "$APP_ID" \
+        --api "$POWERBI_API_ID" \
+        --api-permissions "b2f1b2fa-f35c-407c-979c-a858a808ba85=Role" \
+        2>/dev/null || print_warning "Tenant.ReadWrite.All permission may already exist"
+    
+    print_message "⚠️  You must grant admin consent manually in Azure Portal:"
+    print_message "   Azure AD > App registrations > $APP_NAME > API permissions > Grant admin consent"
+    
+    print_message "✓ Power BI Service API permissions added (waiting for admin consent)"
+else
+    print_warning "Could not find Power BI Service API. You must grant permissions manually."
+fi
+
 # Assign Contributor role to the subscription
 print_message "Assigning Contributor role to subscription..."
 az role assignment create \
@@ -190,9 +215,9 @@ if [ "$SETUP_FABRIC" = "y" ]; then
             --scope "$FABRIC_CAPACITY_ID" \
             2>/dev/null || print_warning "Role assignment may already exist"
         
-        # Add service principal as Fabric Capacity admin
-        print_message "Adding service principal as Fabric Capacity admin member..."
-        MEMBERS=$(echo "$FABRIC_CAPACITY_JSON" | jq -c ".administration.members += [\"$SP_ID\"] | .administration")
+        # Add service principal and user as Fabric Capacity admin
+        print_message "Adding service principal and user as Fabric Capacity admin members..."
+        MEMBERS=$(echo "$FABRIC_CAPACITY_JSON" | jq -c ".administration.members += [\"$SP_ID\", \"lorenz.bangerter@isolutions.ch\"] | .administration")
         
         az fabric capacity update \
             --resource-group "$FABRIC_RG" \
@@ -200,7 +225,7 @@ if [ "$SETUP_FABRIC" = "y" ]; then
             --administration "$MEMBERS" 2>/dev/null
         
         if [ $? -eq 0 ]; then
-            print_message "✓ Service principal added as Fabric Capacity admin"
+            print_message "✓ Service principal and user added as Fabric Capacity admin"
             FABRIC_SETUP_DONE=true
         else
             print_warning "Failed to add admin member. You may need to do this manually in Azure Portal."
