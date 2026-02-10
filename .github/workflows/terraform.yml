@@ -2,8 +2,7 @@ name: Terraform CI/CD
 
 # WORKFLOW BEHAVIOR:
 # - Pull Request: Plans all environments, posts single aggregated comment
-# - Push to main: Auto-deploys dev & test only
-# - Manual prod deployment: Use "Deploy to Production" workflow instead
+# - Push to main: Auto-deploys dev → test → MANUAL APPROVAL → prod
 #
 # CRITICAL: Each environment uses separate state files (dev.tfstate, test.tfstate, prod.tfstate)
 
@@ -198,4 +197,48 @@ jobs:
         run: |
           terraform apply \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
+            -auto-approve
+
+  terraform-apply-prod:
+    name: Terraform Apply (Production)
+    needs: terraform-apply
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: prod
+      # Manual approval required - configured in GitHub Environment settings
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
+      FABRIC_USE_OIDC: true
+      FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform init -backend-config="key=prod.tfstate"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform apply \
+            -var-file="environments/prod.tfvars" \
             -auto-approve

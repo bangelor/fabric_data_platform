@@ -108,36 +108,29 @@ else
     print_message "Service Principal already exists with ID: $SP_ID"
 fi
 
-# Add Microsoft Fabric API permissions
-print_message "Adding Microsoft Fabric API permissions to App Registration..."
+# Add Power BI Service API permissions (required for Fabric)
+print_message "Adding Power BI Service API permissions to App Registration..."
 
-# Get Microsoft Fabric Service Principal (API)
-FABRIC_SP_ID=$(az ad sp list --filter "displayName eq 'Power BI Service'" --query "[0].appId" -o tsv 2>/dev/null)
+# Get Power BI Service API ID
+POWERBI_API_ID=$(az ad sp list --filter "displayName eq 'Power BI Service'" --query "[0].appId" -o tsv 2>/dev/null)
 
-if [ -n "$FABRIC_SP_ID" ]; then
-    print_message "Found Fabric API: $FABRIC_SP_ID"
+if [ -n "$POWERBI_API_ID" ]; then
+    print_message "Found Power BI Service API: $POWERBI_API_ID"
     
-    # Add required API permissions for Fabric workspace management
-    # Workspace.ReadWrite.All permission
+    # Add Tenant.ReadWrite.All (Application permission)
+    # ID: b2f1b2fa-f35c-407c-979c-a858a808ba85
     az ad app permission add \
         --id "$APP_ID" \
-        --api "$FABRIC_SP_ID" \
-        --api-permissions "09850681-111b-4a89-9bed-3f2cae46d706=Role" \
-        2>/dev/null || print_warning "Workspace.ReadWrite.All permission may already exist"
-    
-    # Tenant.ReadWrite.All permission  
-    az ad app permission add \
-        --id "$APP_ID" \
-        --api "$FABRIC_SP_ID" \
-        --api-permissions "a48c8c83-4c8e-4be5-b5e6-5f8f6e3a4c6a=Role" \
+        --api "$POWERBI_API_ID" \
+        --api-permissions "b2f1b2fa-f35c-407c-979c-a858a808ba85=Role" \
         2>/dev/null || print_warning "Tenant.ReadWrite.All permission may already exist"
     
-    print_message "Granting admin consent for API permissions..."
-    az ad app permission admin-consent --id "$APP_ID" 2>/dev/null || print_warning "Admin consent may require additional permissions"
+    print_message "⚠️  You must grant admin consent manually in Azure Portal:"
+    print_message "   Azure AD > App registrations > $APP_NAME > API permissions > Grant admin consent"
     
-    print_message "✓ Fabric API permissions configured"
+    print_message "✓ Power BI Service API permissions added (waiting for admin consent)"
 else
-    print_warning "Could not find Fabric API. You may need to grant permissions manually."
+    print_warning "Could not find Power BI Service API. You must grant permissions manually."
 fi
 
 # Assign Contributor role to the subscription
@@ -222,9 +215,9 @@ if [ "$SETUP_FABRIC" = "y" ]; then
             --scope "$FABRIC_CAPACITY_ID" \
             2>/dev/null || print_warning "Role assignment may already exist"
         
-        # Add service principal as Fabric Capacity admin
-        print_message "Adding service principal as Fabric Capacity admin member..."
-        MEMBERS=$(echo "$FABRIC_CAPACITY_JSON" | jq -c ".administration.members += [\"$SP_ID\"] | .administration")
+        # Add service principal and user as Fabric Capacity admin
+        print_message "Adding service principal and user as Fabric Capacity admin members..."
+        MEMBERS=$(echo "$FABRIC_CAPACITY_JSON" | jq -c ".administration.members += [\"$SP_ID\", \"lorenz.bangerter@isolutions.ch\"] | .administration")
         
         az fabric capacity update \
             --resource-group "$FABRIC_RG" \
@@ -232,7 +225,7 @@ if [ "$SETUP_FABRIC" = "y" ]; then
             --administration "$MEMBERS" 2>/dev/null
         
         if [ $? -eq 0 ]; then
-            print_message "✓ Service principal added as Fabric Capacity admin"
+            print_message "✓ Service principal and user added as Fabric Capacity admin"
             FABRIC_SETUP_DONE=true
         else
             print_warning "Failed to add admin member. You may need to do this manually in Azure Portal."
