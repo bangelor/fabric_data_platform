@@ -5,29 +5,7 @@ variable "workspace_name" {
   type        = string
 }
 
-variable "resource_group_name" {
-  description = "Name of the resource group"
-  type        = string
-}
-
-variable "location" {
-  description = "Azure region"
-  type        = string
-}
-
-variable "core_workspace_id" {
-  description = "ID of the core workspace for data consumption"
-  type        = string
-}
-
 variable "capacity_id" {
-  description = "ID of the existing Fabric capacity (optional)"
+  description = "Fabric capacity UUID"
   type        = string
-  default     = null
-}
-
-variable "tags" {
-  description = "Tags to apply to resources"
-  type        = map(string)
-  default     = {}
 }
