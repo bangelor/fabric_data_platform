@@ -133,6 +133,22 @@ else
     print_warning "Could not find Power BI Service API. You must grant permissions manually."
 fi
 
+# Add Microsoft Graph API permissions (required for Entra group creation)
+print_message "Adding Microsoft Graph API permissions for Entra AD group management..."
+
+# Microsoft Graph API ID (fixed)
+GRAPH_API_ID="00000003-0000-0000-c000-000000000000"
+
+# Add Group.ReadWrite.All (Application permission)
+# ID: 62a82d76-70ea-41e2-9197-370581804d09
+az ad app permission add \
+    --id "$APP_ID" \
+    --api "$GRAPH_API_ID" \
+    --api-permissions "62a82d76-70ea-41e2-9197-370581804d09=Role" \
+    2>/dev/null || print_warning "Group.ReadWrite.All permission may already exist"
+
+print_message "✓ Microsoft Graph API permissions added (waiting for admin consent)"
+
 # Assign Contributor role to the subscription
 print_message "Assigning Contributor role to subscription..."
 az role assignment create \

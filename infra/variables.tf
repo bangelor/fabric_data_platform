@@ -10,3 +10,12 @@ variable "business_domains" {
   type        = list(string)
   default     = [] # Empty by default for dev/test
 }
+
+variable "environment" {
+  description = "Environment name (dev, test, or prod)"
+  type        = string
+  validation {
+    condition     = contains(["dev", "test", "prod"], var.environment)
+    error_message = "Environment must be dev, test, or prod."
+  }
+}

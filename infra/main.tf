@@ -18,26 +18,27 @@ terraform {
   }
 }
 
-# Entra Security Groups
+# Entra Security Groups (environment-specific)
 module "entra_groups" {
   source = "./modules/entra-groups"
 
+  environment      = var.environment
   business_domains = var.business_domains
 }
 
-# Core Workspaces (dev, test, prod)
+# Core Workspace (only for current environment)
 module "core_workspace" {
-  source   = "./modules/core-workspace"
-  for_each = toset(["dev", "test", "prod"])
+  source = "./modules/core-workspace"
 
-  workspace_name = "fabric-core-${each.value}"
-  environment    = each.value
+  workspace_name = "fabric-core-${var.environment}"
+  environment    = var.environment
   capacity_id    = var.fabric_capacity_id
 }
 
 # Domain Workspace (prod only)
 module "domain_workspace" {
   source = "./modules/domain-workspace"
+  count  = var.environment == "prod" ? 1 : 0
 
   workspace_name = "fabric-domain-prod"
   capacity_id    = var.fabric_capacity_id

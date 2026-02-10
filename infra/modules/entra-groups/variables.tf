@@ -1,7 +1,6 @@
-variable "environments" {
-  description = "List of environments for core workspaces"
-  type        = list(string)
-  default     = ["dev", "test", "prod"]
+variable "environment" {
+  description = "Current environment (dev, test, or prod)"
+  type        = string
 }
 
 variable "business_domains" {
