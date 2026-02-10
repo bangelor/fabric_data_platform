@@ -61,15 +61,3 @@ resource "azuread_group" "app_viewers_org" {
   description      = "Power BI App viewers for organization-wide dashboard"
   security_enabled = true
 }
-
-# CI/CD Service Principal
-resource "azuread_application" "cicd" {
-  display_name = "lbn_SP-Fabric-CICD"
-  description  = "Service Principal for CI/CD deployments via GitHub Actions"
-}
-
-resource "azuread_service_principal" "cicd" {
-  client_id                    = azuread_application.cicd.client_id
-  app_role_assignment_required = false
-  description                  = "Service Principal for automated Fabric deployments"
-}

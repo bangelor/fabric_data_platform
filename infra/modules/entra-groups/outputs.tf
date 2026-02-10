@@ -51,19 +51,3 @@ output "app_viewers_org_id" {
   description = "Object ID of Org Dashboard Viewers group"
   value       = azuread_group.app_viewers_org.id
 }
-
-# CI/CD Service Principal
-output "cicd_app_id" {
-  description = "Application (Client) ID of CI/CD Service Principal"
-  value       = azuread_application.cicd.client_id
-}
-
-output "cicd_sp_id" {
-  description = "Object ID of CI/CD Service Principal"
-  value       = azuread_service_principal.cicd.id
-}
-
-output "cicd_sp_object_id" {
-  description = "Service Principal Object ID for role assignments"
-  value       = azuread_service_principal.cicd.object_id
-}
