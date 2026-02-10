@@ -9,8 +9,7 @@ core_workspace_name = "fabric-core-test"
 # Fabric capacity configuration
 # Get the capacity ID by running: az fabric capacity show --name fabric101 --resource-group <rg-name> --query id -o tsv
 # Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Fabric/capacities/fabric101
-# TODO: Add your Fabric Capacity full resource ID here
-fabric_capacity_id = ""
+fabric_capacity_id = "/subscriptions/8c62f590-4f16-4727-a2a7-f7a0304f308d/resourceGroups/rsg-fabric/providers/Microsoft.Fabric/capacities/fabric101"
 
 # Git Integration Configuration
 # DISABLED: GitHub requires a Git connection to be created first in Fabric Portal
