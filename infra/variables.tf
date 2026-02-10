@@ -8,5 +8,5 @@ variable "fabric_capacity_id" {
 variable "business_domains" {
   description = "List of business domains for workspace and group creation (prod only)"
   type        = list(string)
-  default     = []  # Empty by default for dev/test
+  default     = [] # Empty by default for dev/test
 }
