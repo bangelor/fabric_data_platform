@@ -6,3 +6,11 @@ resource "fabric_workspace" "domain" {
   description  = "Domain workspace for data consumption"
   capacity_id  = var.capacity_id
 }
+
+# Assign Platform Admin security group as Workspace Admin
+resource "fabric_workspace_role_assignment" "admin" {
+  workspace_id = fabric_workspace.domain.id
+  principal_id = var.platform_admin_group_id
+  principal_type = "Group"
+  role         = "Admin"
+}

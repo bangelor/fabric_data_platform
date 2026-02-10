@@ -14,3 +14,13 @@ variable "capacity_id" {
   description = "Fabric capacity UUID"
   type        = string
 }
+
+variable "admin_group_id" {
+  description = "Object ID of the Admin security group"
+  type        = string
+}
+
+variable "contributor_group_id" {
+  description = "Object ID of the Contributor security group"
+  type        = string
+}
