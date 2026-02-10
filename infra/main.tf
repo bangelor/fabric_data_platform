@@ -33,7 +33,6 @@ module "core_workspace" {
   git_branch_name             = var.git_branch_name
   git_directory_name          = var.git_directory_name
   git_initialization_strategy = var.git_initialization_strategy
-  git_credentials_source      = var.git_credentials_source
   git_connection_id           = var.git_connection_id
 
   # dbt settings

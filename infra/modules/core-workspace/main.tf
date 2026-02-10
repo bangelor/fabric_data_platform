@@ -30,9 +30,8 @@ resource "fabric_workspace_git" "core" {
     directory_name    = var.git_directory_name
   }
 
-  git_credentials = var.git_credentials_source == "Automatic" ? {
-    source = "Automatic"
-    } : {
+  # GitHub only supports ConfiguredConnection
+  git_credentials = {
     source        = "ConfiguredConnection"
     connection_id = var.git_connection_id
   }

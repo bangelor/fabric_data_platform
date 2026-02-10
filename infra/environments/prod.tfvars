@@ -13,14 +13,15 @@ core_workspace_name = "fabric-core-prod"
 fabric_capacity_id = ""
 
 # Git Integration Configuration
-git_integration_enabled = true
+# DISABLED: GitHub requires a Git connection to be created first in Fabric Portal
+# To enable: Create connection in Fabric workspace Settings > Git integration, then uncomment below
+git_integration_enabled = false
 git_provider_type       = "GitHub"
 git_owner_name          = "bangelor"
 git_repository_name     = "fabric_data_platform"
 git_branch_name         = "main"
 git_directory_name      = "/fabric/core-prod"
-git_credentials_source  = "Automatic"
-# git_connection_id     = ""  # Only needed if using ConfiguredConnection
+# git_connection_id     = ""  # Required - get GUID from Fabric Portal after creating connection
 
 bu_workspaces = {
   finance = {
