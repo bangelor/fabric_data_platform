@@ -40,13 +40,13 @@ module "core_workspace" {
 }
 
 # Domain Workspace (prod only)
+# Uses data source to lookup Platform Admins group (created in dev)
 module "domain_workspace" {
   source = "./modules/domain-workspace"
   count  = var.environment == "prod" ? 1 : 0
 
-  workspace_name       = "fabric-domain-prod"
-  capacity_id          = var.fabric_capacity_id
-  platform_admin_group_id = module.entra_groups.platform_admins_id
+  workspace_name = "fabric-domain-prod"
+  capacity_id    = var.fabric_capacity_id
 
   depends_on = [module.entra_groups]
 }
