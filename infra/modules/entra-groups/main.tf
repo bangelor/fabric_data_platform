@@ -1,14 +1,5 @@
 # Entra ID Security Groups for Fabric Data Platform
 
-terraform {
-  required_providers {
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.0"
-    }
-  }
-}
-
 # Platform Groups (static, environment-agnostic)
 resource "azuread_group" "platform_admins" {
   display_name     = "lbn_SG-Fabric-Platform-Admins"
