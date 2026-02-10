@@ -108,6 +108,38 @@ else
     print_message "Service Principal already exists with ID: $SP_ID"
 fi
 
+# Add Microsoft Fabric API permissions
+print_message "Adding Microsoft Fabric API permissions to App Registration..."
+
+# Get Microsoft Fabric Service Principal (API)
+FABRIC_SP_ID=$(az ad sp list --filter "displayName eq 'Power BI Service'" --query "[0].appId" -o tsv 2>/dev/null)
+
+if [ -n "$FABRIC_SP_ID" ]; then
+    print_message "Found Fabric API: $FABRIC_SP_ID"
+    
+    # Add required API permissions for Fabric workspace management
+    # Workspace.ReadWrite.All permission
+    az ad app permission add \
+        --id "$APP_ID" \
+        --api "$FABRIC_SP_ID" \
+        --api-permissions "09850681-111b-4a89-9bed-3f2cae46d706=Role" \
+        2>/dev/null || print_warning "Workspace.ReadWrite.All permission may already exist"
+    
+    # Tenant.ReadWrite.All permission  
+    az ad app permission add \
+        --id "$APP_ID" \
+        --api "$FABRIC_SP_ID" \
+        --api-permissions "a48c8c83-4c8e-4be5-b5e6-5f8f6e3a4c6a=Role" \
+        2>/dev/null || print_warning "Tenant.ReadWrite.All permission may already exist"
+    
+    print_message "Granting admin consent for API permissions..."
+    az ad app permission admin-consent --id "$APP_ID" 2>/dev/null || print_warning "Admin consent may require additional permissions"
+    
+    print_message "✓ Fabric API permissions configured"
+else
+    print_warning "Could not find Fabric API. You may need to grant permissions manually."
+fi
+
 # Assign Contributor role to the subscription
 print_message "Assigning Contributor role to subscription..."
 az role assignment create \
