@@ -7,10 +7,8 @@ location            = "eastus"
 core_workspace_name = "fabric-core-prod"
 
 # Fabric capacity configuration
-# Get the capacity ID by running: az fabric capacity show --name fabric101 --resource-group <rg-name> --query id -o tsv
-# Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Fabric/capacities/fabric101
-# TODO: Add your Fabric Capacity full resource ID here
-fabric_capacity_id = ""
+# Capacity UUID from Fabric Portal: Settings > License Configuration > Capacity ID
+fabric_capacity_id = "01CA0BA8-FCEE-4FB2-A296-C131D0DEC5B6"
 
 # Git Integration Configuration
 # DISABLED: GitHub requires a Git connection to be created first in Fabric Portal
