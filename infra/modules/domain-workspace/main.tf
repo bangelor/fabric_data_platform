@@ -31,11 +31,11 @@ resource "fabric_shortcut" "warehouse_gold" {
   path         = "Tables"
   name         = "core_warehouse_gold"
 
-  target = jsonencode({
-    oneLake = {
-      workspaceId = var.core_workspace_id
-      itemId      = var.core_warehouse_id
-      path        = "Tables/gold"
+  target = {
+    onelake = {
+      workspace_id = var.core_workspace_id
+      item_id      = var.core_warehouse_id
+      path         = "Tables/gold"
     }
-  })
+  }
 }
