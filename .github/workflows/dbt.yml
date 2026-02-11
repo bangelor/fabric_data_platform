@@ -52,11 +52,11 @@ jobs:
         run: |
           pip install dbt-core==${{ env.DBT_VERSION }}
           pip install dbt-fabric
-          pip install sqlfluff sqlfluff-templater-dbt
+          pip install sqlfluff
 
       - name: dbt Lint (sqlfluff)
         working-directory: ${{ env.WORKING_DIR }}
-        run: sqlfluff lint models/ --dialect tsql --ignore parsing
+        run: sqlfluff lint models/ --dialect tsql
 
       - name: dbt Parse
         working-directory: ${{ env.WORKING_DIR }}
