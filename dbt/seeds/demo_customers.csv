@@ -1,0 +1,16 @@
+customer_id,customer_name,email,signup_date,status,country,lifetime_value
+1,Alice Johnson,alice.johnson@example.com,2024-01-15,active,USA,1250.00
+2,Bob Smith,bob.smith@example.com,2024-02-20,active,Canada,850.50
+3,Carol White,carol.white@example.com,2024-01-10,inactive,USA,0.00
+4,David Brown,david.brown@example.com,2024-03-05,active,UK,2100.75
+5,Emma Davis,emma.davis@example.com,2024-02-28,active,Australia,1500.00
+6,Frank Miller,frank.miller@example.com,2024-01-25,churned,USA,450.00
+7,Grace Lee,grace.lee@example.com,2024-04-10,active,Singapore,3200.00
+8,Henry Wilson,henry.wilson@example.com,2024-03-15,active,Canada,950.25
+9,Iris Chen,iris.chen@example.com,2024-02-05,active,USA,1800.00
+10,Jack Taylor,jack.taylor@example.com,2024-01-30,inactive,UK,0.00
+11,Karen Anderson,karen.anderson@example.com,2024-03-20,active,Germany,1100.00
+12,Leo Martinez,leo.martinez@example.com,2024-04-01,active,Spain,750.50
+13,Maria Garcia,maria.garcia@example.com,2024-01-05,churned,Mexico,200.00
+14,Nathan Clark,nathan.clark@example.com,2024-02-15,active,USA,2500.00
+15,Olivia Rodriguez,olivia.rodriguez@example.com,2024-03-25,active,Brazil,1350.75

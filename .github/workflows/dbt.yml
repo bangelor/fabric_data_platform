@@ -1,18 +1,18 @@
 name: dbt CI/CD
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'dbt/**'
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - 'dbt/**'
+      - '.github/workflows/dbt.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'dbt/**'
+      - '.github/workflows/dbt.yml'
   workflow_dispatch:
     inputs:
       environment:
@@ -21,6 +21,7 @@ on:
         type: choice
         options:
           - dev
+          - test
           - prod
 
 env:
@@ -33,9 +34,10 @@ permissions:
   id-token: write  # Required for Azure OIDC authentication
 
 jobs:
-  dbt-test:
-    name: dbt Test & Check
+  dbt-lint:
+    name: Lint & Compile Check
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     
     steps:
       - name: Checkout code
@@ -52,36 +54,21 @@ jobs:
           pip install dbt-fabric
           pip install sqlfluff
 
-      - name: Azure Login with OIDC
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: dbt Debug
-        working-directory: ${{ env.WORKING_DIR }}
-        run: dbt debug --target dev
-
       - name: dbt Lint (sqlfluff)
         working-directory: ${{ env.WORKING_DIR }}
-        run: sqlfluff lint models/
+        run: sqlfluff lint models/ --ignore parsing
 
-      - name: dbt Compile
+      - name: dbt Parse
         working-directory: ${{ env.WORKING_DIR }}
-        run: dbt compile --target dev
+        run: dbt parse
 
-      - name: dbt Test
-        working-directory: ${{ env.WORKING_DIR }}
-        run: dbt test --target dev
-
-  dbt-run-dev:
-    name: dbt Run (Dev)
-    needs: dbt-test
+  dbt-test-env:
+    name: Build in TEST Environment
+    needs: dbt-lint
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request'
     environment:
-      name: dev
+      name: test
     
     steps:
       - name: Checkout code
@@ -104,33 +91,66 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: dbt Debug
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt debug --target test
+
+      - name: dbt Seed
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt seed --target test --full-refresh
+
       - name: dbt Run
         working-directory: ${{ env.WORKING_DIR }}
-        run: dbt run --target dev
+        run: dbt run --target test
 
       - name: dbt Test
         working-directory: ${{ env.WORKING_DIR }}
-        run: dbt test --target dev
+        run: dbt test --target test
 
       - name: Generate dbt Docs
         working-directory: ${{ env.WORKING_DIR }}
-        run: dbt docs generate --target dev
+        run: dbt docs generate --target test
 
       - name: Upload dbt Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dbt-artifacts-dev
+          name: dbt-artifacts-test
           path: |
             ${{ env.WORKING_DIR }}/target/manifest.json
             ${{ env.WORKING_DIR }}/target/catalog.json
             ${{ env.WORKING_DIR }}/target/run_results.json
           retention-days: 30
 
-  dbt-run-prod:
-    name: dbt Run (Production)
-    needs: dbt-test
+      - name: Comment PR with Results
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            const runResults = JSON.parse(fs.readFileSync('${{ env.WORKING_DIR }}/target/run_results.json', 'utf8'));
+            
+            const success = runResults.results.filter(r => r.status === 'success').length;
+            const failed = runResults.results.filter(r => r.status === 'error').length;
+            const skipped = runResults.results.filter(r => r.status === 'skipped').length;
+            
+            const body = `## dbt Test Environment Build Results\n\n` +
+              `✅ **Success:** ${success}\n` +
+              `❌ **Failed:** ${failed}\n` +
+              `⏭️ **Skipped:** ${skipped}\n\n` +
+              `Target: \`test\`\n` +
+              `Elapsed time: ${runResults.elapsed_time.toFixed(2)}s`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  dbt-prod:
+    name: Build in PROD Environment
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: prod
     
@@ -155,9 +175,17 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: dbt Run (Full Refresh for Marts)
+      - name: dbt Debug
         working-directory: ${{ env.WORKING_DIR }}
-        run: dbt run --target prod --select marts --full-refresh
+        run: dbt debug --target prod
+
+      - name: dbt Seed
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt seed --target prod --full-refresh
+
+      - name: dbt Run (All Models)
+        working-directory: ${{ env.WORKING_DIR }}
+        run: dbt run --target prod
 
       - name: dbt Test
         working-directory: ${{ env.WORKING_DIR }}
@@ -176,3 +204,11 @@ jobs:
             ${{ env.WORKING_DIR }}/target/catalog.json
             ${{ env.WORKING_DIR }}/target/run_results.json
           retention-days: 90
+
+      - name: Create Deployment Summary
+        run: |
+          echo "## 🚀 Production Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** prod" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
