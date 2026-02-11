@@ -1,16 +1,5 @@
 # Main Infrastructure Outputs
 
-# Domain outputs
-output "core_domain_id" {
-  description = "ID of the core domain"
-  value       = fabric_domain.core.id
-}
-
-output "business_domain_ids" {
-  description = "Map of business domain names to their IDs"
-  value       = { for k, v in fabric_domain.business : k => v.id }
-}
-
 # Core workspace outputs
 output "core_workspace_id" {
   description = "ID of the core workspace"
