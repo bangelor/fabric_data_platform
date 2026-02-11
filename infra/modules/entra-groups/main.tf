@@ -7,6 +7,10 @@ resource "azuread_group" "platform_admins" {
   display_name     = "lbn_SG-Fabric-Platform-Admins"
   description      = "Fabric tenant administrators - operate the platform and manage all workspaces"
   security_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azuread_group" "cicd_approvers" {
@@ -15,6 +19,10 @@ resource "azuread_group" "cicd_approvers" {
   display_name     = "lbn_SG-Fabric-CICD-Approvers"
   description      = "Approve CI/CD deployments to production"
   security_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Core Workspace Groups (only for current environment)

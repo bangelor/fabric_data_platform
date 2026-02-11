@@ -5,6 +5,11 @@ variable "workspace_name" {
   type        = string
 }
 
+variable "domain_name" {
+  description = "Name of the business domain (e.g., finance, sales)"
+  type        = string
+}
+
 variable "capacity_id" {
   description = "Fabric capacity UUID"
   type        = string

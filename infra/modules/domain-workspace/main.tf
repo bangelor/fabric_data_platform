@@ -3,8 +3,12 @@
 # Fabric Workspace for domain
 resource "fabric_workspace" "domain" {
   display_name = var.workspace_name
-  description  = "Domain workspace for data consumption"
+  description  = "${title(var.domain_name)} domain workspace for data consumption"
   capacity_id  = var.capacity_id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Assign Platform Admin security group as Workspace Admin
@@ -19,9 +23,13 @@ resource "fabric_workspace_role_assignment" "admin" {
 
 # Lakehouse for domain workspace
 resource "fabric_lakehouse" "domain" {
-  display_name = "domain_lakehouse"
-  description  = "Domain lakehouse for data consumption"
+  display_name = "${var.domain_name}_lakehouse"
+  description  = "${title(var.domain_name)} lakehouse for data consumption"
   workspace_id = fabric_workspace.domain.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Shortcut to core warehouse gold schema
