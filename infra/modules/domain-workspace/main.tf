@@ -26,17 +26,16 @@ resource "fabric_lakehouse" "domain" {
 
 # Shortcut to core warehouse gold schema
 resource "fabric_shortcut" "warehouse_gold" {
-  display_name = "core_warehouse_gold"
-  description  = "Shortcut to core warehouse gold schema"
   workspace_id = fabric_workspace.domain.id
   item_id      = fabric_lakehouse.domain.id
   path         = "Tables"
-
-  target {
-    onelake {
-      workspace_id = var.core_workspace_id
-      item_id      = var.core_warehouse_id
-      path         = "Tables/gold"
+  name         = "core_warehouse_gold"
+  
+  target = jsonencode({
+    oneLake = {
+      workspaceId = var.core_workspace_id
+      itemId      = var.core_warehouse_id
+      path        = "Tables/gold"
     }
-  }
+  })
 }
