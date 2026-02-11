@@ -26,3 +26,30 @@ resource "fabric_workspace_role_assignment" "contributor" {
   }
   role = "Contributor"
 }
+
+# Lakehouse for core workspace
+resource "fabric_lakehouse" "core" {
+  display_name = "core-lakehouse-${var.environment}"
+  description  = "Core lakehouse for ${var.environment} environment"
+  workspace_id = fabric_workspace.core.id
+}
+
+# Warehouse for core workspace
+resource "fabric_warehouse" "core" {
+  display_name = "core-warehouse-${var.environment}"
+  description  = "Core warehouse for ${var.environment} environment"
+  workspace_id = fabric_workspace.core.id
+}
+
+# Grant domain workspace read access to warehouse (prod only)
+resource "fabric_warehouse_role_assignment" "domain_reader" {
+  count        = var.domain_admin_group_id != "" ? 1 : 0
+  workspace_id = fabric_workspace.core.id
+  item_id      = fabric_warehouse.core.id
+  
+  principal = {
+    id   = var.domain_admin_group_id
+    type = "Group"
+  }
+  role = "ReadData"
+}
