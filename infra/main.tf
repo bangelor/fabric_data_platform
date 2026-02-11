@@ -30,12 +30,11 @@ module "entra_groups" {
 module "core_workspace" {
   source = "./modules/core-workspace"
 
-  workspace_name        = "fabric-core-${var.environment}"
-  environment           = var.environment
-  capacity_id           = var.fabric_capacity_id
-  admin_group_id        = module.entra_groups.core_admins_id
-  contributor_group_id  = module.entra_groups.core_contributors_id
-  domain_admin_group_id = var.environment == "prod" ? module.entra_groups.platform_admins_id : ""
+  workspace_name       = "fabric-core-${var.environment}"
+  environment          = var.environment
+  capacity_id          = var.fabric_capacity_id
+  admin_group_id       = module.entra_groups.core_admins_id
+  contributor_group_id = module.entra_groups.core_contributors_id
 
   depends_on = [module.entra_groups]
 }
