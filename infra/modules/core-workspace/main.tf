@@ -48,7 +48,7 @@ resource "terraform_data" "warehouse_schemas" {
   ]
 
   provisioner "local-exec" {
-    command = <<-EOT
+    command     = <<-EOT
       $maxRetries = 5
       $retryCount = 0
       $token = (az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
