@@ -39,12 +39,12 @@ module "core_workspace" {
   depends_on = [module.entra_groups]
 }
 
-# Domain Workspace (prod only)
+# Domain Workspaces (one per business domain, prod only)
 module "domain_workspace" {
-  source = "./modules/domain-workspace"
-  count  = var.environment == "prod" ? 1 : 0
+  source   = "./modules/domain-workspace"
+  for_each = var.environment == "prod" ? toset(var.business_domains) : []
 
-  workspace_name      = "fabric-domain-prod"
+  workspace_name      = "fabric-${each.value}-${var.environment}"
   capacity_id         = var.fabric_capacity_id
   platform_admin_id   = module.entra_groups.platform_admins_id
   core_workspace_id   = module.core_workspace.workspace_id

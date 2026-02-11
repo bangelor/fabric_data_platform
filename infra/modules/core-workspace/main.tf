@@ -62,7 +62,10 @@ resource "terraform_data" "warehouse_schemas" {
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='bronze') EXEC('CREATE SCHEMA bronze');
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='silver') EXEC('CREATE SCHEMA silver');
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='gold') EXEC('CREATE SCHEMA gold');
-          " && echo "Schemas created successfully." && exit 0
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='bronze' AND TABLE_NAME='_placeholder') CREATE TABLE bronze._placeholder (id INT);
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='silver' AND TABLE_NAME='_placeholder') CREATE TABLE silver._placeholder (id INT);
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='gold' AND TABLE_NAME='_placeholder') CREATE TABLE gold._placeholder (id INT);
+          " && echo "Schemas and placeholder tables created successfully." && exit 0
 
         RETRY=$((RETRY+1))
         echo "Attempt $RETRY failed, retrying in $((10*RETRY))s..."
