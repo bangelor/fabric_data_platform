@@ -37,7 +37,7 @@ jobs:
   terraform-lint:
     name: Terraform Lint & Validate
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,7 +75,7 @@ jobs:
       FABRIC_USE_OIDC: true
       FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -116,7 +116,7 @@ jobs:
     needs: terraform-plan
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Download All Plan Outputs
         uses: actions/download-artifact@v4
@@ -131,7 +131,7 @@ jobs:
             const fs = require('fs');
             const environments = ['dev', 'test', 'prod'];
             let comment = '## Terraform Plans 🌍\n\n';
-            
+
             for (const env of environments) {
               try {
                 const planPath = `plans/tfplan-output-${env}/plan-${env}.txt`;
@@ -144,7 +144,7 @@ jobs:
                 comment += `<details>\n<summary><b>${env.toUpperCase()}</b> Environment</summary>\n\n❌ Plan not available\n</details>\n\n`;
               }
             }
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -171,7 +171,7 @@ jobs:
       FABRIC_USE_OIDC: true
       FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -187,6 +187,13 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install sqlcmd
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list)"
+          sudo apt-get update
+          sudo apt-get install -y sqlcmd
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
@@ -215,7 +222,7 @@ jobs:
       FABRIC_USE_OIDC: true
       FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -231,6 +238,13 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install sqlcmd
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list)"
+          sudo apt-get update
+          sudo apt-get install -y sqlcmd
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
