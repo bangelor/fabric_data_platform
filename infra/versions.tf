@@ -9,8 +9,7 @@ terraform {
     }
     fabric = {
       source  = "microsoft/fabric"
-      version = ">=
- 0.1.0"
+      version = ">= 0.1.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
