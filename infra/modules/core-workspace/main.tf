@@ -51,7 +51,8 @@ resource "fabric_variable_library" "deployment" {
 
   definition = {
     "settings.json" = {
-      source = "${path.module}/definitions/settings.json"
+      source          = "${path.module}/definitions/settings.json"
+      processing_mode = "None"
     }
     "variables.json" = {
       source = "${path.module}/definitions/variables.json"
