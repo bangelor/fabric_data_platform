@@ -62,14 +62,15 @@ resource "terraform_data" "warehouse_schemas" {
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='bronze') EXEC('CREATE SCHEMA bronze');
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='silver') EXEC('CREATE SCHEMA silver');
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='gold') EXEC('CREATE SCHEMA gold');
-          " && echo "Schemas created successfully." && break
+          " && echo "Schemas created successfully." && exit 0
 
         RETRY=$((RETRY+1))
         echo "Attempt $RETRY failed, retrying in $((10*RETRY))s..."
         sleep $((10*RETRY))
       done
 
-      [ $RETRY -ge $MAX_RETRIES ] && echo "Failed after $MAX_RETRIES attempts." && exit 1
+      echo "Failed after $MAX_RETRIES attempts."
+      exit 1
     EOT
   }
 
