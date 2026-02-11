@@ -19,7 +19,7 @@ resource "fabric_workspace_role_assignment" "admin" {
 
 # Lakehouse for domain workspace
 resource "fabric_lakehouse" "domain" {
-  display_name = "domain-lakehouse"
+  display_name = "domain_lakehouse"
   description  = "Domain lakehouse for data consumption"
   workspace_id = fabric_workspace.domain.id
 }
