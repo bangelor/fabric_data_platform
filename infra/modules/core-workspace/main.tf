@@ -26,3 +26,17 @@ resource "fabric_workspace_role_assignment" "contributor" {
   }
   role = "Contributor"
 }
+
+# Lakehouse for core workspace
+resource "fabric_lakehouse" "core" {
+  display_name = "core-lakehouse-${var.environment}"
+  description  = "Core lakehouse for ${var.environment} environment"
+  workspace_id = fabric_workspace.core.id
+}
+
+# Warehouse for core workspace
+resource "fabric_warehouse" "core" {
+  display_name = "core-warehouse-${var.environment}"
+  description  = "Core warehouse for ${var.environment} environment"
+  workspace_id = fabric_workspace.core.id
+}
