@@ -190,10 +190,9 @@ jobs:
 
       - name: Install sqlcmd
         run: |
-          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y sqlcmd
+          curl -fsSL -o sqlcmd.tar.bz2 https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.bz2
+          sudo tar -xjf sqlcmd.tar.bz2 -C /usr/local/bin sqlcmd
+          sqlcmd --version
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
@@ -241,10 +240,9 @@ jobs:
 
       - name: Install sqlcmd
         run: |
-          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y sqlcmd
+          curl -fsSL -o sqlcmd.tar.bz2 https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.bz2
+          sudo tar -xjf sqlcmd.tar.bz2 -C /usr/local/bin sqlcmd
+          sqlcmd --version
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
