@@ -30,11 +30,12 @@ module "entra_groups" {
 module "core_workspace" {
   source = "./modules/core-workspace"
 
-  workspace_name       = "fabric-core-${var.environment}"
-  environment          = var.environment
-  capacity_id          = var.fabric_capacity_id
-  admin_group_id       = module.entra_groups.core_admins_id
-  contributor_group_id = module.entra_groups.core_contributors_id
+  workspace_name        = "fabric-core-${var.environment}"
+  environment           = var.environment
+  capacity_id           = var.fabric_capacity_id
+  admin_group_id        = module.entra_groups.core_admins_id
+  contributor_group_id  = module.entra_groups.core_contributors_id
+  domain_admin_group_id = var.environment == "prod" ? module.entra_groups.platform_admins_id : ""
 
   depends_on = [module.entra_groups]
 }
@@ -44,9 +45,12 @@ module "domain_workspace" {
   source = "./modules/domain-workspace"
   count  = var.environment == "prod" ? 1 : 0
 
-  workspace_name    = "fabric-domain-prod"
-  capacity_id       = var.fabric_capacity_id
-  platform_admin_id = module.entra_groups.platform_admins_id
+  workspace_name       = "fabric-domain-prod"
+  capacity_id          = var.fabric_capacity_id
+  platform_admin_id    = module.entra_groups.platform_admins_id
+  core_workspace_id    = module.core_workspace.workspace_id
+  core_warehouse_id    = module.core_workspace.warehouse_id
+  core_warehouse_name  = module.core_workspace.warehouse_name
 
-  depends_on = [module.entra_groups]
+  depends_on = [module.entra_groups, module.core_workspace]
 }
