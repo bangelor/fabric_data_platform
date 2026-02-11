@@ -30,7 +30,7 @@ resource "fabric_shortcut" "warehouse_gold" {
   item_id      = fabric_lakehouse.domain.id
   path         = "Tables"
   name         = "core_warehouse_gold"
-  
+
   target = jsonencode({
     oneLake = {
       workspaceId = var.core_workspace_id
