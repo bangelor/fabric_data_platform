@@ -24,9 +24,3 @@ variable "contributor_group_id" {
   description = "Object ID of the Contributor security group"
   type        = string
 }
-
-variable "domain_admin_group_id" {
-  description = "Object ID of domain/platform admin group for warehouse read access (prod only)"
-  type        = string
-  default     = ""
-}
