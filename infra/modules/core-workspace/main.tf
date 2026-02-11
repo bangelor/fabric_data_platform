@@ -48,40 +48,29 @@ resource "terraform_data" "warehouse_schemas" {
   ]
 
   provisioner "local-exec" {
-    command     = <<-EOT
-      $maxRetries = 5
-      $retryCount = 0
-      $token = (az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
+    command = <<-EOT
+      MAX_RETRIES=5
+      RETRY=0
+      TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
 
-      do {
-        try {
-          $sqlCommands = @"
-            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'bronze')
-              EXEC('CREATE SCHEMA bronze');
-            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'silver')
-              EXEC('CREATE SCHEMA silver');
-            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gold')
-              EXEC('CREATE SCHEMA gold');
-"@
+      until [ $RETRY -ge $MAX_RETRIES ]; do
+        sqlcmd \
+          -S "${fabric_warehouse.core.properties.connection_string}" \
+          -d "${fabric_warehouse.core.display_name}" \
+          -G -P "$TOKEN" \
+          -Q "
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='bronze') EXEC('CREATE SCHEMA bronze');
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='silver') EXEC('CREATE SCHEMA silver');
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='gold') EXEC('CREATE SCHEMA gold');
+          " && echo "Schemas created successfully." && break
 
-          Invoke-Sqlcmd -ServerInstance "${fabric_warehouse.core.properties.connection_string}" `
-                        -Database "${fabric_warehouse.core.display_name}" `
-                        -AccessToken $token `
-                        -Query $sqlCommands `
-                        -ErrorAction Stop
+        RETRY=$((RETRY+1))
+        echo "Attempt $RETRY failed, retrying in $((10*RETRY))s..."
+        sleep $((10*RETRY))
+      done
 
-          Write-Host "Schemas created successfully."
-          break
-        }
-        catch {
-          $retryCount++
-          Write-Host "Attempt $retryCount failed: $_"
-          if ($retryCount -ge $maxRetries) { throw "Failed after $maxRetries attempts." }
-          Start-Sleep -Seconds (10 * $retryCount)
-        }
-      } while ($true)
+      [ $RETRY -ge $MAX_RETRIES ] && echo "Failed after $MAX_RETRIES attempts." && exit 1
     EOT
-    interpreter = ["PowerShell", "-Command"]
   }
 
   depends_on = [fabric_warehouse.core]
