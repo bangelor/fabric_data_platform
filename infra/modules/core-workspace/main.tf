@@ -5,7 +5,6 @@ resource "fabric_workspace" "core" {
   display_name = var.workspace_name
   description  = "Core Fabric workspace - ${title(var.environment)} environment"
   capacity_id  = var.capacity_id
-  domain_id    = var.domain_id
 }
 
 # Assign Admin security group as Workspace Admin

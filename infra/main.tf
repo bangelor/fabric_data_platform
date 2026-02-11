@@ -56,7 +56,6 @@ module "core_workspace" {
   workspace_name       = "fabric-core-${var.environment}"
   environment          = var.environment
   capacity_id          = var.fabric_capacity_id
-  domain_id            = fabric_domain.core.id
   admin_group_id       = module.entra_groups.core_admins_id
   contributor_group_id = module.entra_groups.core_contributors_id
 
@@ -70,11 +69,32 @@ module "domain_workspace" {
 
   workspace_name      = "fabric-${each.value}-${var.environment}"
   capacity_id         = var.fabric_capacity_id
-  domain_id           = fabric_domain.business[each.value].id
   platform_admin_id   = module.entra_groups.platform_admins_id
   core_workspace_id   = module.core_workspace.workspace_id
   core_warehouse_id   = module.core_workspace.warehouse_id
   core_warehouse_name = module.core_workspace.warehouse_name
 
   depends_on = [module.entra_groups, module.core_workspace, fabric_domain.business]
+}
+
+# Assign core workspace to core domain
+resource "fabric_domain_workspace_assignments" "core" {
+  domain_id = fabric_domain.core.id
+  workspace_ids = [
+    module.core_workspace.workspace_id
+  ]
+
+  depends_on = [module.core_workspace, fabric_domain.core]
+}
+
+# Assign each domain workspace to its respective business domain
+resource "fabric_domain_workspace_assignments" "business" {
+  for_each = var.environment == "prod" ? toset(var.business_domains) : []
+
+  domain_id = fabric_domain.business[each.value].id
+  workspace_ids = [
+    module.domain_workspace[each.value].workspace_id
+  ]
+
+  depends_on = [module.domain_workspace, fabric_domain.business]
 }
