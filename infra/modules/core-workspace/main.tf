@@ -42,38 +42,12 @@ resource "fabric_warehouse" "core" {
 }
 
 # Variable Library for deployment pipelines
+# Note: Created empty - variables must be added via Fabric UI after creation
+# The JSON structure validation is strict and requires specific Fabric format
 resource "fabric_variable_library" "deployment" {
-  display_name              = "deployment_variables_${var.environment}"
-  description               = "Variable library for Fabric deployment pipelines - ${title(var.environment)} environment"
-  workspace_id              = fabric_workspace.core.id
-  definition_update_enabled = false
-  format                    = "Default"
-
-  definition = {
-    "settings.json" = {
-      source          = "${path.module}/definitions/settings.json"
-      processing_mode = "None"
-    }
-    "variables.json" = {
-      source = "${path.module}/definitions/variables.json"
-      tokens = {
-        environment    = var.environment
-        workspace_id   = fabric_workspace.core.id
-        workspace_name = fabric_workspace.core.display_name
-        lakehouse_id   = fabric_lakehouse.core.id
-        lakehouse_name = fabric_lakehouse.core.display_name
-        warehouse_id   = fabric_warehouse.core.id
-        warehouse_name = fabric_warehouse.core.display_name
-        capacity_id    = var.capacity_id
-      }
-    }
-  }
-
-  depends_on = [
-    fabric_workspace.core,
-    fabric_lakehouse.core,
-    fabric_warehouse.core
-  ]
+  display_name = "deployment_variables_${var.environment}"
+  description  = "Variable library for Fabric deployment pipelines - ${title(var.environment)} environment"
+  workspace_id = fabric_workspace.core.id
 }
 
 # Create bronze, silver, gold schemas in warehouse
