@@ -29,3 +29,13 @@ output "warehouse_name" {
   description = "Name of the core warehouse"
   value       = fabric_warehouse.core.display_name
 }
+
+output "variable_library_id" {
+  description = "ID of the deployment variable library"
+  value       = fabric_variable_library.deployment.id
+}
+
+output "variable_library_name" {
+  description = "Name of the deployment variable library"
+  value       = fabric_variable_library.deployment.display_name
+}
