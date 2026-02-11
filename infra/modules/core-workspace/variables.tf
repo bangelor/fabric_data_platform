@@ -15,6 +15,11 @@ variable "capacity_id" {
   type        = string
 }
 
+variable "domain_id" {
+  description = "Fabric domain ID to assign the workspace to"
+  type        = string
+}
+
 variable "admin_group_id" {
   description = "Object ID of the Admin security group"
   type        = string
