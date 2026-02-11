@@ -25,7 +25,6 @@ on:
           - prod
 
 env:
-  DBT_VERSION: '1.7.0'
   WORKING_DIR: './dbt'
 
 permissions:
@@ -49,9 +48,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dbt
-        run: |
-          pip install dbt-core==${{ env.DBT_VERSION }}
-          pip install dbt-fabric
+        run: pip install dbt-fabric
 
       - name: dbt Parse & Compile Check
         working-directory: ${{ env.WORKING_DIR }}
@@ -75,9 +72,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dbt
-        run: |
-          pip install dbt-core==${{ env.DBT_VERSION }}
-          pip install dbt-fabric
+        run: pip install dbt-fabric
 
       - name: Azure Login with OIDC
         uses: azure/login@v2
@@ -159,9 +154,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dbt
-        run: |
-          pip install dbt-core==${{ env.DBT_VERSION }}
-          pip install dbt-fabric
+        run: pip install dbt-fabric
 
       - name: Azure Login with OIDC
         uses: azure/login@v2
