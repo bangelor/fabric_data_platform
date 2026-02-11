@@ -1,11 +1,6 @@
 # Main Infrastructure Outputs
 
 # Domain outputs
-output "platform_domain_id" {
-  description = "ID of the root platform domain"
-  value       = fabric_domain.platform.id
-}
-
 output "core_domain_id" {
   description = "ID of the core domain"
   value       = fabric_domain.core.id

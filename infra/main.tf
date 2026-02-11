@@ -18,27 +18,20 @@ terraform {
   }
 }
 
-# Root domain for the data platform
-resource "fabric_domain" "platform" {
-  display_name       = "Data Platform"
-  description        = "Root domain for the Fabric data platform"
-  contributors_scope = "AdminsOnly"
-}
-
 # Core domain for all core workspaces (dev, test, prod)
 resource "fabric_domain" "core" {
-  display_name     = "Core"
-  description      = "Core domain containing platform workspaces for all environments"
-  parent_domain_id = fabric_domain.platform.id
+  display_name       = "Core"
+  description        = "Core domain containing platform workspaces for all environments"
+  contributors_scope = "AdminsOnly"
 }
 
 # Business domains (one per business domain, for prod only)
 resource "fabric_domain" "business" {
   for_each = var.environment == "prod" ? toset(var.business_domains) : []
 
-  display_name     = title(each.value)
-  description      = "${title(each.value)} domain for business-specific data products"
-  parent_domain_id = fabric_domain.platform.id
+  display_name       = title(each.value)
+  description        = "${title(each.value)} domain for business-specific data products"
+  contributors_scope = "AdminsOnly"
 }
 
 # Entra Security Groups (environment-specific)
