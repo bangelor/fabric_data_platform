@@ -6,9 +6,9 @@ resource "fabric_workspace" "domain" {
   description  = "${title(var.domain_name)} domain workspace for data consumption"
   capacity_id  = var.capacity_id
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # Assign Platform Admin security group as Workspace Admin
@@ -27,9 +27,9 @@ resource "fabric_lakehouse" "domain" {
   description  = "${title(var.domain_name)} lakehouse for data consumption"
   workspace_id = fabric_workspace.domain.id
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # Shortcut to core warehouse gold schema
