@@ -18,22 +18,6 @@ terraform {
   }
 }
 
-# Core domain for all core workspaces (dev, test, prod)
-resource "fabric_domain" "core" {
-  display_name       = "Core"
-  description        = "Core domain containing platform workspaces for all environments"
-  contributors_scope = "AdminsOnly"
-}
-
-# Business domains (one per business domain, for prod only)
-resource "fabric_domain" "business" {
-  for_each = var.environment == "prod" ? toset(var.business_domains) : []
-
-  display_name       = title(each.value)
-  description        = "${title(each.value)} domain for business-specific data products"
-  contributors_scope = "AdminsOnly"
-}
-
 # Entra Security Groups (environment-specific)
 module "entra_groups" {
   source = "./modules/entra-groups"
@@ -52,7 +36,7 @@ module "core_workspace" {
   admin_group_id       = module.entra_groups.core_admins_id
   contributor_group_id = module.entra_groups.core_contributors_id
 
-  depends_on = [module.entra_groups, fabric_domain.core]
+  depends_on = [module.entra_groups]
 }
 
 # Domain Workspaces (one per business domain, prod only)
@@ -67,27 +51,5 @@ module "domain_workspace" {
   core_warehouse_id   = module.core_workspace.warehouse_id
   core_warehouse_name = module.core_workspace.warehouse_name
 
-  depends_on = [module.entra_groups, module.core_workspace, fabric_domain.business]
-}
-
-# Assign core workspace to core domain
-resource "fabric_domain_workspace_assignments" "core" {
-  domain_id = fabric_domain.core.id
-  workspace_ids = [
-    module.core_workspace.workspace_id
-  ]
-
-  depends_on = [module.core_workspace, fabric_domain.core]
-}
-
-# Assign each domain workspace to its respective business domain
-resource "fabric_domain_workspace_assignments" "business" {
-  for_each = var.environment == "prod" ? toset(var.business_domains) : []
-
-  domain_id = fabric_domain.business[each.value].id
-  workspace_ids = [
-    module.domain_workspace[each.value].workspace_id
-  ]
-
-  depends_on = [module.domain_workspace, fabric_domain.business]
+  depends_on = [module.entra_groups, module.core_workspace]
 }
