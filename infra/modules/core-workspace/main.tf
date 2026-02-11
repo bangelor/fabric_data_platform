@@ -48,24 +48,24 @@ resource "terraform_data" "warehouse_schemas" {
       Start-Sleep -Seconds 10
       $token = (az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
       $connectionString = "${fabric_workspace.core.properties.connection_string}"
-      
+
       $sqlCommands = @"
       IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bronze')
       BEGIN
           EXEC('CREATE SCHEMA bronze');
       END;
-      
+
       IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'silver')
       BEGIN
           EXEC('CREATE SCHEMA silver');
       END;
-      
+
       IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'gold')
       BEGIN
           EXEC('CREATE SCHEMA gold');
       END;
 "@
-      
+
       Invoke-Sqlcmd -ServerInstance $connectionString -Database "${fabric_warehouse.core.display_name}" -AccessToken $token -Query $sqlCommands
     EOT
     interpreter = ["PowerShell", "-Command"]
