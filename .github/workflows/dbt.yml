@@ -71,6 +71,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install ODBC Driver 18 for SQL Server
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+          sudo apt-get install -y unixodbc-dev
+
       - name: Install dbt
         run: pip install dbt-fabric
 
@@ -102,6 +110,7 @@ jobs:
         run: dbt docs generate --target test
 
       - name: Upload dbt Artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-artifacts-test
@@ -117,18 +126,27 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const runResults = JSON.parse(fs.readFileSync('${{ env.WORKING_DIR }}/target/run_results.json', 'utf8'));
+            const path = '${{ env.WORKING_DIR }}/target/run_results.json';
             
-            const success = runResults.results.filter(r => r.status === 'success').length;
-            const failed = runResults.results.filter(r => r.status === 'error').length;
-            const skipped = runResults.results.filter(r => r.status === 'skipped').length;
-            
-            const body = `## dbt Test Environment Build Results\n\n` +
-              `✅ **Success:** ${success}\n` +
-              `❌ **Failed:** ${failed}\n` +
-              `⏭️ **Skipped:** ${skipped}\n\n` +
-              `Target: \`test\`\n` +
-              `Elapsed time: ${runResults.elapsed_time.toFixed(2)}s`;
+            let body;
+            if (fs.existsSync(path)) {
+              const runResults = JSON.parse(fs.readFileSync(path, 'utf8'));
+              const success = runResults.results.filter(r => r.status === 'success').length;
+              const failed = runResults.results.filter(r => r.status === 'error').length;
+              const skipped = runResults.results.filter(r => r.status === 'skipped').length;
+              
+              body = `## dbt Test Environment Build Results\n\n` +
+                `✅ **Success:** ${success}\n` +
+                `❌ **Failed:** ${failed}\n` +
+                `⏭️ **Skipped:** ${skipped}\n\n` +
+                `Target: \`test\`\n` +
+                `Elapsed time: ${runResults.elapsed_time.toFixed(2)}s`;
+            } else {
+              body = `## dbt Test Environment Build Results\n\n` +
+                `❌ **Build Failed**\n\n` +
+                `The dbt build failed before completing. Check the workflow logs for details.\n` +
+                `Target: \`test\``;
+            }
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -152,6 +170,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Install ODBC Driver 18 for SQL Server
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+          sudo apt-get install -y unixodbc-dev
 
       - name: Install dbt
         run: pip install dbt-fabric
@@ -184,6 +210,7 @@ jobs:
         run: dbt docs generate --target prod
 
       - name: Upload dbt Artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-artifacts-prod
@@ -194,6 +221,7 @@ jobs:
           retention-days: 90
 
       - name: Create Deployment Summary
+        if: success()
         run: |
           echo "## 🚀 Production Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
