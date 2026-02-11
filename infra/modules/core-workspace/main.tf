@@ -40,3 +40,16 @@ resource "fabric_warehouse" "core" {
   description  = "Core warehouse for ${var.environment} environment"
   workspace_id = fabric_workspace.core.id
 }
+
+# Grant domain workspace read access to warehouse (prod only)
+resource "fabric_warehouse_role_assignment" "domain_reader" {
+  count        = var.domain_admin_group_id != "" ? 1 : 0
+  workspace_id = fabric_workspace.core.id
+  item_id      = fabric_warehouse.core.id
+  
+  principal = {
+    id   = var.domain_admin_group_id
+    type = "Group"
+  }
+  role = "ReadData"
+}
