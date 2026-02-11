@@ -43,30 +43,43 @@ resource "fabric_warehouse" "core" {
 
 # Create bronze, silver, gold schemas in warehouse
 resource "terraform_data" "warehouse_schemas" {
+  triggers_replace = [
+    fabric_warehouse.core.id
+  ]
+
   provisioner "local-exec" {
     command = <<-EOT
-      Start-Sleep -Seconds 10
+      $maxRetries = 5
+      $retryCount = 0
       $token = (az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
-      $connectionString = "${fabric_workspace.core.properties.connection_string}"
 
-      $sqlCommands = @"
-      IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bronze')
-      BEGIN
-          EXEC('CREATE SCHEMA bronze');
-      END;
-
-      IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'silver')
-      BEGIN
-          EXEC('CREATE SCHEMA silver');
-      END;
-
-      IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'gold')
-      BEGIN
-          EXEC('CREATE SCHEMA gold');
-      END;
+      do {
+        try {
+          $sqlCommands = @"
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'bronze')
+              EXEC('CREATE SCHEMA bronze');
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'silver')
+              EXEC('CREATE SCHEMA silver');
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gold')
+              EXEC('CREATE SCHEMA gold');
 "@
 
-      Invoke-Sqlcmd -ServerInstance $connectionString -Database "${fabric_warehouse.core.display_name}" -AccessToken $token -Query $sqlCommands
+          Invoke-Sqlcmd -ServerInstance "${fabric_warehouse.core.properties.connection_string}" `
+                        -Database "${fabric_warehouse.core.display_name}" `
+                        -AccessToken $token `
+                        -Query $sqlCommands `
+                        -ErrorAction Stop
+
+          Write-Host "Schemas created successfully."
+          break
+        }
+        catch {
+          $retryCount++
+          Write-Host "Attempt $retryCount failed: $_"
+          if ($retryCount -ge $maxRetries) { throw "Failed after $maxRetries attempts." }
+          Start-Sleep -Seconds (10 * $retryCount)
+        }
+      } while ($true)
     EOT
     interpreter = ["PowerShell", "-Command"]
   }
