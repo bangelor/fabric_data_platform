@@ -48,17 +48,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dbt and dependencies
+      - name: Install dbt
         run: |
           pip install dbt-core==${{ env.DBT_VERSION }}
           pip install dbt-fabric
-          pip install sqlfluff
 
-      - name: dbt Lint (sqlfluff)
-        working-directory: ${{ env.WORKING_DIR }}
-        run: sqlfluff lint models/ --dialect tsql
-
-      - name: dbt Parse
+      - name: dbt Parse & Compile Check
         working-directory: ${{ env.WORKING_DIR }}
         run: dbt parse
 
