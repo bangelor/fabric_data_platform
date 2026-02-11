@@ -43,15 +43,15 @@ resource "fabric_warehouse" "core" {
 
 # Variable Library for deployment pipelines
 resource "fabric_variable_library" "deployment" {
-  display_name = "deployment_variables_${var.environment}"
-  description  = "Variable library for Fabric deployment pipelines - ${title(var.environment)} environment"
-  workspace_id = fabric_workspace.core.id
-  format       = "Default"
+  display_name              = "deployment_variables_${var.environment}"
+  description               = "Variable library for Fabric deployment pipelines - ${title(var.environment)} environment"
+  workspace_id              = fabric_workspace.core.id
+  definition_update_enabled = false
+  format                    = "Default"
 
   definition = {
     "settings.json" = {
-      source          = "${path.module}/definitions/settings.json"
-      processing_mode = "None"
+      source = "${path.module}/definitions/settings.json"
     }
     "variables.json" = {
       source = "${path.module}/definitions/variables.json"
