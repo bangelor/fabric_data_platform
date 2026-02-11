@@ -1,23 +1,5 @@
 # Main Terraform configuration for Fabric Data Platform
 
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0"
-    }
-    fabric = {
-      source  = "microsoft/fabric"
-      version = ">= 0.1.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.0"
-    }
-  }
-}
-
 # Entra Security Groups (environment-specific)
 module "entra_groups" {
   source = "./modules/entra-groups"
@@ -35,8 +17,6 @@ module "core_workspace" {
   capacity_id          = var.fabric_capacity_id
   admin_group_id       = module.entra_groups.core_admins_id
   contributor_group_id = module.entra_groups.core_contributors_id
-
-  depends_on = [module.entra_groups]
 }
 
 # Domain Workspaces (one per business domain, prod only)
@@ -45,11 +25,10 @@ module "domain_workspace" {
   for_each = var.environment == "prod" ? toset(var.business_domains) : []
 
   workspace_name      = "fabric-${each.value}-${var.environment}"
+  domain_name         = each.value
   capacity_id         = var.fabric_capacity_id
   platform_admin_id   = module.entra_groups.platform_admins_id
   core_workspace_id   = module.core_workspace.workspace_id
   core_warehouse_id   = module.core_workspace.warehouse_id
   core_warehouse_name = module.core_workspace.warehouse_name
-
-  depends_on = [module.entra_groups, module.core_workspace]
 }

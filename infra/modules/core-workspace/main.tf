@@ -5,6 +5,10 @@ resource "fabric_workspace" "core" {
   display_name = var.workspace_name
   description  = "Core Fabric workspace - ${title(var.environment)} environment"
   capacity_id  = var.capacity_id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Assign Admin security group as Workspace Admin
@@ -32,6 +36,10 @@ resource "fabric_lakehouse" "core" {
   display_name = "core_lakehouse_${var.environment}"
   description  = "Core lakehouse for ${var.environment} environment"
   workspace_id = fabric_workspace.core.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Warehouse for core workspace
@@ -39,6 +47,10 @@ resource "fabric_warehouse" "core" {
   display_name = "core_warehouse_${var.environment}"
   description  = "Core warehouse for ${var.environment} environment"
   workspace_id = fabric_workspace.core.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Variable Library for deployment pipelines
