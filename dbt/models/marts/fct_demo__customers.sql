@@ -50,7 +50,7 @@ final as (
         
         -- Metadata
         _loaded_at as loaded_at,
-        SYSDATETIME() as transformed_at
+        CAST(SYSDATETIME() AS datetime2(6)) as transformed_at
         
     from customer_metrics
 )
