@@ -1,15 +1,11 @@
 version: 2
 
 models:
-  - name: fct_demo__customers
-    description: |
-      **CERTIFIED** Production-ready customer fact table with enriched metrics and segments.
-      This table includes customer demographics, engagement metrics, value segments, 
-      and behavioral flags for analytical and reporting purposes.
-    
+  - name: slv_demo__customer_metrics
+    description: Silver layer with enriched customer metrics, segments, and calculated fields
     columns:
       - name: customer_id
-        description: Unique identifier for each customer (Primary Key)
+        description: Unique identifier for each customer
         tests:
           - unique
           - not_null
@@ -103,24 +99,7 @@ models:
           - accepted_values:
               values: [0, 1]
       
-      - name: customer_category
-        description: |
-          High-level customer categorization for reporting:
-          - Active Customer: Active and has made purchases
-          - New Customer: Active but no purchases yet
-          - Churned Customer: Has churned
-          - Inactive Customer: All other cases
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['Active Customer', 'New Customer', 'Churned Customer', 'Inactive Customer']
-      
-      - name: loaded_at
+      - name: _loaded_at
         description: Timestamp when the source data was loaded
-        tests:
-          - not_null
-      
-      - name: transformed_at
-        description: Timestamp when the mart table was last transformed
         tests:
           - not_null

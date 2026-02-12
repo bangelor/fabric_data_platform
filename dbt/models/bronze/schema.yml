@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: stg_demo__customers
-    description: Staging layer for demo customer data - cleaned and standardized from seed data
+  - name: brz_demo__customers
+    description: Bronze layer for demo customer data - raw ingestion with basic cleaning and type casting
     columns:
       - name: customer_id
         description: Unique identifier for each customer
@@ -44,4 +44,4 @@ models:
           - not_null
       
       - name: _loaded_at
-        description: Timestamp when the record was loaded into staging
+        description: Timestamp when the record was loaded into bronze layer

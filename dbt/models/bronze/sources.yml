@@ -1,0 +1,14 @@
+version: 2
+
+# External data sources will be defined here
+# Sources are for tables that exist outside of dbt (e.g., raw tables in Fabric Lakehouse)
+# Seeds are internal to dbt and use ref(), not source()
+
+# Example source definition:
+# sources:
+#   - name: raw_fabric_lakehouse
+#     description: Raw data from Fabric Lakehouse
+#     schema: dbo
+#     tables:
+#       - name: raw_table_name
+#         description: Description of the raw table
