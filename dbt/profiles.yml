@@ -6,19 +6,28 @@ fabric_data_platform:
     dev:
       type: fabric
       driver: 'ODBC Driver 18 for SQL Server'
-      server: your-fabric-workspace.datawarehouse.fabric.microsoft.com
+      server: yxe6ecc263mezdjvuarhfykc2y-ksnb7qqzd4iufenweci5kyijy4.datawarehouse.fabric.microsoft.com
       port: 1433
-      database: your_lakehouse
+      database: core_warehouse_dev
       schema: dbo
       authentication: CLI
       # Use Azure CLI authentication by default
       
+    test:
+      type: fabric
+      driver: 'ODBC Driver 18 for SQL Server'
+      server: yxe6ecc263mezdjvuarhfykc2y-7kr47n2iypguze3ls5ez5zfzf4.datawarehouse.fabric.microsoft.com
+      port: 1433
+      database: core_warehouse_test
+      schema: dbo
+      authentication: CLI
+      
     prod:
       type: fabric
       driver: 'ODBC Driver 18 for SQL Server'
-      server: your-fabric-workspace-prod.datawarehouse.fabric.microsoft.com
+      server: yxe6ecc263mezdjvuarhfykc2y-r3dt27ase72ezpzrfbv35ebihq.datawarehouse.fabric.microsoft.com
       port: 1433
-      database: your_lakehouse_prod
+      database: core_warehouse_prod
       schema: dbo
       authentication: CLI
       

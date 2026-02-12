@@ -1,0 +1,31 @@
+[sqlfluff]
+# SQL dialect for Microsoft Fabric (T-SQL/SQL Server)
+dialect = tsql
+
+# Don't use dbt templater in CI - just lint raw SQL
+templater = raw
+
+# Exclude directories
+exclude_rules = L034,L036
+max_line_length = 120
+
+# Indentation configuration
+[sqlfluff:indentation]
+tab_space_size = 4
+indent_unit = space
+
+# Rules configuration
+[sqlfluff:rules]
+capitalisation_policy = upper
+
+[sqlfluff:rules:L010]  # Keywords should be upper case
+capitalisation_policy = upper
+
+[sqlfluff:rules:L014]  # Unquoted identifiers
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:L030]  # Function names
+capitalisation_policy = upper
+
+[sqlfluff:layout:type:comma]
+line_position = trailing
