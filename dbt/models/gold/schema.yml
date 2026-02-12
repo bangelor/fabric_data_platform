@@ -1,0 +1,126 @@
+version: 2
+
+models:
+  - name: gld_demo__customers
+    description: |
+      **CERTIFIED GOLD** Production-ready customer dimension with enriched metrics and segments.
+      Business-ready table for analytics and reporting. This is the single source of truth
+      for customer data in the gold layer.
+    
+    columns:
+      - name: customer_id
+        description: Unique identifier for each customer (Primary Key)
+        tests:
+          - unique
+          - not_null
+      
+      - name: customer_name
+        description: Full name of the customer
+        tests:
+          - not_null
+      
+      - name: email
+        description: Customer email address
+        tests:
+          - not_null
+          - unique
+      
+      - name: country
+        description: Country where the customer is located
+        tests:
+          - not_null
+      
+      - name: status
+        description: Current customer status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'inactive', 'churned']
+      
+      - name: signup_date
+        description: Date when the customer signed up
+        tests:
+          - not_null
+      
+      - name: days_since_signup
+        description: Number of days since customer signup
+        tests:
+          - not_null
+      
+      - name: months_since_signup
+        description: Approximate number of months since customer signup
+        tests:
+          - not_null
+      
+      - name: lifetime_value
+        description: Total revenue generated from this customer
+        tests:
+          - not_null
+      
+      - name: value_segment
+        description: |
+          Customer value segmentation:
+          - high_value: >= $2000
+          - medium_value: >= $1000 and < $2000
+          - low_value: > $0 and < $1000
+          - no_value: $0
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['high_value', 'medium_value', 'low_value', 'no_value']
+      
+      - name: engagement_level
+        description: |
+          Customer engagement classification:
+          - engaged: Active with high lifetime value
+          - moderate: Active with some purchases
+          - new: Active but no purchases yet
+          - at_risk: Inactive status
+          - lost: Churned status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['engaged', 'moderate', 'new', 'at_risk', 'lost', 'unknown']
+      
+      - name: is_active
+        description: Boolean flag - 1 if customer status is active, 0 otherwise
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      
+      - name: has_purchased
+        description: Boolean flag - 1 if customer has made purchases (lifetime_value > 0), 0 otherwise
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      
+      - name: is_churned
+        description: Boolean flag - 1 if customer has churned, 0 otherwise
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      
+      - name: customer_category
+        description: |
+          High-level customer categorization for reporting:
+          - Active Customer: Active and has made purchases
+          - New Customer: Active but no purchases yet
+          - Churned Customer: Has churned
+          - Inactive Customer: All other cases
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Active Customer', 'New Customer', 'Churned Customer', 'Inactive Customer']
+      
+      - name: loaded_at
+        description: Timestamp when the source data was loaded into bronze
+        tests:
+          - not_null
+      
+      - name: transformed_at
+        description: Timestamp when the gold table was last transformed
+        tests:
+          - not_null

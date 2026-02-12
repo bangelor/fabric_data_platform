@@ -23,26 +23,28 @@ clean-targets:
 # Model configurations
 models:
   fabric_data_platform:
-    # Staging models - raw data transformations
-    staging:
+    # Bronze models - raw data ingestion and light transformations
+    bronze:
       +materialized: view
-      +schema: staging
+      +schema: bronze
       +tags:
-        - "staging"
+        - "bronze"
+        - "raw"
       
-    # Intermediate models - business logic transformations
-    intermediate:
+    # Silver models - cleansed and conformed data
+    silver:
       +materialized: view
-      +schema: intermediate
+      +schema: silver
       +tags:
-        - "intermediate"
+        - "silver"
+        - "transformed"
       
-    # Marts models - certified models for BU consumption
-    marts:
+    # Gold models - business-ready, aggregated, certified data
+    gold:
       +materialized: table
-      +schema: marts
+      +schema: gold
       +tags:
-        - "marts"
+        - "gold"
         - "certified"
       # These are the models BUs will consume
       +meta:

@@ -100,6 +100,13 @@ jobs:
           dbt seed --target test --full-refresh --show
           echo "Seed completed successfully"
 
+      - name: Clean up old models
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "Dropping old models and schemas..."
+          dbt run-operation drop_old_models --target test
+          echo "Cleanup completed"
+
       - name: dbt Run
         working-directory: ${{ env.WORKING_DIR }}
         run: |
@@ -205,6 +212,13 @@ jobs:
           echo "Loading seed data..."
           dbt seed --target prod --full-refresh --show
           echo "Seed completed successfully"
+
+      - name: Clean up old models
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "Dropping old models and schemas..."
+          dbt run-operation drop_old_models --target prod
+          echo "Cleanup completed"
 
       - name: dbt Run (All Models)
         working-directory: ${{ env.WORKING_DIR }}
