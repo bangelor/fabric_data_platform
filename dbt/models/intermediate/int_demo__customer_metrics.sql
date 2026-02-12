@@ -24,8 +24,8 @@ customer_metrics as (
         signup_date,
         
         -- Calculated temporal metrics
-        datediff(day, signup_date, getdate()) as days_since_signup,
-        datediff(day, signup_date, getdate()) / 30 as months_since_signup,
+        datediff(day, signup_date, CAST(SYSDATETIME() AS date)) as days_since_signup,
+        datediff(day, signup_date, CAST(SYSDATETIME() AS date)) / 30 as months_since_signup,
         
         -- Financial metrics
         lifetime_value,

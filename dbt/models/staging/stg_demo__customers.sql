@@ -29,7 +29,7 @@ renamed as (
         cast(lifetime_value as decimal(18,2)) as lifetime_value,
         
         -- Metadata
-        getdate() as _loaded_at
+        SYSDATETIME() as _loaded_at
         
     from source
     
