@@ -1,0 +1,4 @@
+version: 2
+
+# Sources will be defined here when you connect to external data
+# Seeds are referenced using ref(), not source()
