@@ -7,8 +7,6 @@ models:
       This table includes customer demographics, engagement metrics, value segments, 
       and behavioral flags for analytical and reporting purposes.
     
-    tags: ['certified', 'demo']
-    
     columns:
       - name: customer_id
         description: Unique identifier for each customer (Primary Key)

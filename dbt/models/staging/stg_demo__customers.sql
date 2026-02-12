@@ -6,7 +6,7 @@
 }}
 
 with source as (
-    select * from {{ source('demo_seeds', 'demo_customers') }}
+    select * from {{ ref('demo_customers') }}
 ),
 
 renamed as (

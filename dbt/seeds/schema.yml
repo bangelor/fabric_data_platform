@@ -1,0 +1,46 @@
+version: 2
+
+seeds:
+  - name: demo_customers
+    description: Demo customer seed data for initial dbt development and testing
+    config:
+      schema: dbo
+    columns:
+      - name: customer_id
+        description: Unique identifier for each customer
+        tests:
+          - unique
+          - not_null
+      
+      - name: customer_name
+        description: Full name of the customer
+        tests:
+          - not_null
+      
+      - name: email
+        description: Customer email address
+        tests:
+          - not_null
+          - unique
+      
+      - name: signup_date
+        description: Date when the customer signed up
+        tests:
+          - not_null
+      
+      - name: status
+        description: Current customer status (active, inactive, churned)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'inactive', 'churned']
+      
+      - name: country
+        description: Country where the customer is located
+        tests:
+          - not_null
+      
+      - name: lifetime_value
+        description: Total revenue generated from this customer
+        tests:
+          - not_null

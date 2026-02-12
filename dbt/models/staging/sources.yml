@@ -1,36 +1,4 @@
 version: 2
 
-sources:
-  - name: demo_seeds
-    description: Demo customer seed data for initial dbt development
-    schema: dbo  # Seeds are loaded to default dbo schema
-    tables:
-      - name: demo_customers
-        description: Sample customer data including signup dates, status, and lifetime value
-        columns:
-          - name: customer_id
-            description: Unique identifier for each customer
-            tests:
-              - unique
-              - not_null
-          - name: customer_name
-            description: Full name of the customer
-          - name: email
-            description: Customer email address
-            tests:
-              - not_null
-          - name: signup_date
-            description: Date when the customer signed up
-            tests:
-              - not_null
-          - name: status
-            description: Current customer status (active, inactive, churned)
-            tests:
-              - accepted_values:
-                  values: ['active', 'inactive', 'churned']
-          - name: country
-            description: Country where the customer is located
-          - name: lifetime_value
-            description: Total revenue generated from this customer
-            tests:
-              - not_null
+# Sources will be defined here when you connect to external data
+# Seeds are referenced using ref(), not source()
