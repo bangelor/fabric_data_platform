@@ -1,6 +1,6 @@
 {% macro drop_old_models() %}
     {# 
-        Generic macro to drop any tables, views, or schemas in the database 
+        Generic macro to drop any tables or views in bronze/silver/gold schemas
         that are not present in the current dbt project.
         
         This prevents orphaned objects from accumulating when models are removed or renamed.
@@ -8,7 +8,7 @@
         Usage: dbt run-operation drop_old_models
     #}
     
-    {% set managed_schemas = ['bronze', 'silver', 'gold', 'staging', 'intermediate', 'marts', 'dbo_staging', 'dbo_intermediate', 'dbo_marts'] %}
+    {% set managed_schemas = ['bronze', 'silver', 'gold'] %}
     
     {% do log("=" * 80, info=True) %}
     {% do log("Scanning database for orphaned objects...", info=True) %}
@@ -76,24 +76,6 @@
         {% endif %}
         
         {# Drop empty schemas #}
-        {% do log("", info=True) %}
-        {% do log("Checking for empty schemas...", info=True) %}
-        
-        {% for schema in managed_schemas %}
-            {% set check_query %}
-                SELECT COUNT(*) as cnt
-                FROM INFORMATION_SCHEMA.TABLES
-                WHERE TABLE_SCHEMA = '{{ schema }}'
-            {% endset %}
-            
-            {% set result = run_query(check_query) %}
-            {% if result and result[0][0] == 0 %}
-                {% set drop_schema_sql = "DROP SCHEMA IF EXISTS [" ~ schema ~ "]" %}
-                {% do log("  - Dropping empty schema: " ~ schema, info=True) %}
-                {% do run_query(drop_schema_sql) %}
-            {% endif %}
-        {% endfor %}
-        
         {% do log("", info=True) %}
         {% do log("=" * 80, info=True) %}
         {% do log("✓ Cleanup complete!", info=True) %}
