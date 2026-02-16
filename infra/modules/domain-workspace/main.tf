@@ -1,43 +1,68 @@
-# Domain Workspace Module
+# ==============================================================================
+# Domain Workspace Module - Acc Fabric Data Platform
+# ==============================================================================
 
-# Fabric Workspace for domain
-resource "fabric_workspace" "domain" {
-  display_name = var.workspace_name
-  description  = "${title(var.domain_name)} domain workspace for data consumption"
-  capacity_id  = var.capacity_id
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
+locals {
+  name_prefix  = "acc_fabric"
+  domain_label = title(var.domain_name)
 }
 
-# Assign Platform Admin security group as Workspace Admin
-resource "fabric_workspace_role_assignment" "admin" {
+# ------------------------------------------------------------------------------
+# Workspace
+# ------------------------------------------------------------------------------
+resource "fabric_workspace" "domain" {
+  display_name = "${local.name_prefix}_ws_${var.domain_name}_prod"
+  description  = "${local.domain_label} domain workspace – data consumption and reporting"
+  capacity_id  = var.capacity_id
+}
+
+# ------------------------------------------------------------------------------
+# Role Assignments
+# ------------------------------------------------------------------------------
+resource "fabric_workspace_role_assignment" "platform_admin" {
   workspace_id = fabric_workspace.domain.id
   principal = {
-    id   = var.platform_admin_id
+    id   = var.platform_admin_group_id
     type = "Group"
   }
   role = "Admin"
 }
 
-# Lakehouse for domain workspace
-resource "fabric_lakehouse" "domain" {
-  display_name = "${var.domain_name}_lakehouse"
-  description  = "${title(var.domain_name)} lakehouse for data consumption"
+resource "fabric_workspace_role_assignment" "domain_admin" {
   workspace_id = fabric_workspace.domain.id
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
+  principal = {
+    id   = var.domain_admin_group_id
+    type = "Group"
+  }
+  role = "Admin"
 }
 
-# Shortcut to core warehouse gold schema
-resource "fabric_shortcut" "warehouse_gold" {
+resource "fabric_workspace_role_assignment" "domain_contributor" {
+  workspace_id = fabric_workspace.domain.id
+  principal = {
+    id   = var.domain_contributor_group_id
+    type = "Group"
+  }
+  role = "Contributor"
+}
+
+# ------------------------------------------------------------------------------
+# Lakehouse (consumption layer)
+# ------------------------------------------------------------------------------
+resource "fabric_lakehouse" "domain" {
+  display_name = "${local.name_prefix}_lh_${var.domain_name}_prod"
+  description  = "${local.domain_label} lakehouse – consumption via OneLake shortcuts"
+  workspace_id = fabric_workspace.domain.id
+}
+
+# ------------------------------------------------------------------------------
+# OneLake Shortcuts (gold layer from core)
+# ------------------------------------------------------------------------------
+resource "fabric_shortcut" "core_gold" {
   workspace_id = fabric_workspace.domain.id
   item_id      = fabric_lakehouse.domain.id
   path         = "Tables"
-  name         = "core_warehouse_gold"
+  name         = "sc_core_wh_gold"
 
   target = {
     onelake = {

@@ -1,73 +1,78 @@
-# Entra ID Security Groups for Fabric Data Platform
+# ==============================================================================
+# Entra ID Security Groups - Acc Fabric Data Platform
+# ==============================================================================
+# Naming: ACC-SG-Fabric-{Scope}-{Env}-{Role}
+# Tenant-wide groups omit the environment segment.
+# ==============================================================================
 
-# Platform Groups (created only in prod environment to avoid duplicates)
+locals {
+  prefix = "ACC-SG-Fabric"
+  env    = title(var.environment) # "Prod" / "Dev"
+}
+
+# ------------------------------------------------------------------------------
+# Platform-wide groups (tenant-scoped, prod only to avoid duplicates)
+# ------------------------------------------------------------------------------
 resource "azuread_group" "platform_admins" {
-  count = var.environment == "prod" ? 1 : 0
-
-  display_name     = "lbn_SG-Fabric-Platform-Admins"
-  description      = "Fabric tenant administrators - operate the platform and manage all workspaces"
+  count            = var.environment == "prod" ? 1 : 0
+  display_name     = "${local.prefix}-Platform-Admins"
+  description      = "Fabric tenant administrators – capacity, gateway, and workspace management"
   security_enabled = true
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
 }
 
 resource "azuread_group" "cicd_approvers" {
-  count = var.environment == "prod" ? 1 : 0
-
-  display_name     = "lbn_SG-Fabric-CICD-Approvers"
-  description      = "Approve CI/CD deployments to production"
+  count            = var.environment == "prod" ? 1 : 0
+  display_name     = "${local.prefix}-CICD-Approvers"
+  description      = "Approve CI/CD deployment pipelines to production"
   security_enabled = true
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
 }
 
-# Core Workspace Groups (only for current environment)
+# ------------------------------------------------------------------------------
+# Core workspace groups (per environment)
+# ------------------------------------------------------------------------------
 resource "azuread_group" "core_admins" {
-  display_name     = "lbn_SG-Fabric-Core-${var.environment}-Admins"
-  description      = "Admin access to Core workspace - ${var.environment} environment"
+  display_name     = "${local.prefix}-Core-${local.env}-Admins"
+  description      = "Admin access to Core ${local.env} workspace – platform team"
   security_enabled = true
 }
 
 resource "azuread_group" "core_contributors" {
-  display_name     = "lbn_SG-Fabric-Core-${var.environment}-Contributors"
-  description      = "Contributor access to Core workspace - ${var.environment} environment (Data Engineers & Analysts)"
+  display_name     = "${local.prefix}-Core-${local.env}-Contributors"
+  description      = "Contributor access to Core ${local.env} workspace – data engineers and analysts"
   security_enabled = true
 }
 
-# Business Workspace Groups (per domain, prod only)
-resource "azuread_group" "business_admins" {
-  for_each = var.environment == "prod" ? toset(var.business_domains) : []
-
-  display_name     = "lbn_SG-Fabric-Biz-${each.value}-Admins"
-  description      = "Admin access to ${each.value} business workspace (Domain Owners)"
+# ------------------------------------------------------------------------------
+# Business domain workspace groups (prod only, one per domain)
+# ------------------------------------------------------------------------------
+resource "azuread_group" "biz_admins" {
+  for_each         = var.environment == "prod" ? toset(var.business_domains) : []
+  display_name     = "${local.prefix}-Biz-${each.value}-Admins"
+  description      = "Admin access to ${each.value} business workspace – domain owners"
   security_enabled = true
 }
 
-resource "azuread_group" "business_contributors" {
-  for_each = var.environment == "prod" ? toset(var.business_domains) : []
-
-  display_name     = "lbn_SG-Fabric-Biz-${each.value}-Contributors"
-  description      = "Contributor access to ${each.value} business workspace (Business Key Users)"
+resource "azuread_group" "biz_contributors" {
+  for_each         = var.environment == "prod" ? toset(var.business_domains) : []
+  display_name     = "${local.prefix}-Biz-${each.value}-Contributors"
+  description      = "Contributor access to ${each.value} business workspace – business key users"
   security_enabled = true
 }
 
-# App Audience Groups (per domain + org-wide, prod only)
-resource "azuread_group" "app_viewers_domain" {
-  for_each = var.environment == "prod" ? toset(var.business_domains) : []
-
-  display_name     = "lbn_SG-Fabric-App-${each.value}-Viewers"
-  description      = "Power BI App viewers for ${each.value} domain reports"
+# ------------------------------------------------------------------------------
+# Audience groups (prod only – used for Power BI App audiences, RLS, etc.)
+# Decoupled from delivery mechanism so they can serve Apps, APIs, or direct access.
+# ------------------------------------------------------------------------------
+resource "azuread_group" "aud_domain" {
+  for_each         = var.environment == "prod" ? toset(var.business_domains) : []
+  display_name     = "${local.prefix}-Aud-${each.value}-Members"
+  description      = "Audience for ${each.value} domain – report and data consumers"
   security_enabled = true
 }
 
-resource "azuread_group" "app_viewers_org" {
-  count = var.environment == "prod" ? 1 : 0
-
-  display_name     = "lbn_SG-Fabric-App-OrgDashboard-Viewers"
-  description      = "Power BI App viewers for organization-wide dashboard"
+resource "azuread_group" "aud_org" {
+  count            = var.environment == "prod" ? 1 : 0
+  display_name     = "${local.prefix}-Aud-Org-Members"
+  description      = "Audience for organization-wide dashboards and cross-domain content"
   security_enabled = true
 }
