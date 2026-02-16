@@ -1,0 +1,11 @@
+project_id,project_name,client_name,industry,start_date,end_date,project_status,total_budget
+1,Cloud Migration Initiative,TechCorp Industries,Technology,2024-01-15,2024-06-30,completed,150000.00
+2,Digital Transformation Program,FinServe Global,Financial Services,2024-02-01,2024-12-31,in_progress,450000.00
+3,IoT Smart Factory,Manufacturing Plus,Manufacturing,2024-03-10,2024-09-15,in_progress,280000.00
+4,AI Customer Analytics,RetailMax,Retail,2024-01-20,2024-05-30,completed,180000.00
+5,Cybersecurity Overhaul,HealthCare Systems,Healthcare,2024-04-01,2024-11-30,in_progress,320000.00
+6,Data Lake Implementation,Energy Solutions,Energy,2024-02-15,2024-08-31,in_progress,250000.00
+7,Mobile Banking App,BankFirst,Financial Services,2024-03-01,2024-10-15,in_progress,420000.00
+8,Network Infrastructure Upgrade,Global Logistics,Logistics,2024-01-10,2024-04-30,completed,120000.00
+9,DevOps Automation Suite,SoftDev Inc,Technology,2024-04-15,2024-12-31,in_progress,200000.00
+10,Legacy System Modernization,Insurance Corp,Insurance,2024-02-20,2024-09-30,in_progress,350000.00

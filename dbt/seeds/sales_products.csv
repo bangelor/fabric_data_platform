@@ -1,0 +1,13 @@
+product_id,product_name,product_category,unit_price,cost_per_unit,is_active
+1,Cloud Infrastructure Consulting,Consulting Services,15000.00,8000.00,TRUE
+2,DevOps Implementation,Implementation,25000.00,12000.00,TRUE
+3,AI/ML Solution Development,Software Development,50000.00,22000.00,TRUE
+4,Cybersecurity Assessment,Consulting Services,12000.00,6000.00,TRUE
+5,Data Pipeline Engineering,Implementation,30000.00,15000.00,TRUE
+6,Network Architecture Design,Consulting Services,18000.00,9000.00,TRUE
+7,Mobile App Development,Software Development,40000.00,18000.00,TRUE
+8,IoT Solutions Integration,Implementation,35000.00,16000.00,TRUE
+9,System Modernization,Consulting Services,22000.00,10000.00,TRUE
+10,Training & Support Package,Support Services,8000.00,3000.00,TRUE
+11,Managed Services (Monthly),Support Services,5000.00,2000.00,TRUE
+12,Emergency Support (Hourly),Support Services,500.00,200.00,TRUE

@@ -44,3 +44,185 @@ seeds:
         description: Total revenue generated from this customer
         tests:
           - not_null
+
+  - name: sales_products
+    description: Engineering company products and services catalog
+    config:
+      schema: dbo
+    columns:
+      - name: product_id
+        description: Unique identifier for each product/service
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_name
+        description: Name of the product or service offering
+        tests:
+          - not_null
+      
+      - name: product_category
+        description: Category of the product/service
+        tests:
+          - not_null
+      
+      - name: unit_price
+        description: Standard selling price per unit
+        tests:
+          - not_null
+      
+      - name: cost_per_unit
+        description: Cost to deliver per unit
+        tests:
+          - not_null
+      
+      - name: is_active
+        description: Whether the product is currently available for sale
+        tests:
+          - not_null
+
+  - name: sales_reps
+    description: Sales representatives information
+    config:
+      schema: dbo
+    columns:
+      - name: sales_rep_id
+        description: Unique identifier for each sales representative
+        tests:
+          - unique
+          - not_null
+      
+      - name: first_name
+        description: Sales rep first name
+        tests:
+          - not_null
+      
+      - name: last_name
+        description: Sales rep last name
+        tests:
+          - not_null
+      
+      - name: email
+        description: Sales rep email address
+        tests:
+          - not_null
+          - unique
+      
+      - name: region
+        description: Geographic region assigned to the sales rep
+        tests:
+          - not_null
+      
+      - name: hire_date
+        description: Date when the sales rep was hired
+        tests:
+          - not_null
+      
+      - name: status
+        description: Employment status
+        tests:
+          - not_null
+
+  - name: sales_projects
+    description: Client projects and engagements
+    config:
+      schema: dbo
+    columns:
+      - name: project_id
+        description: Unique identifier for each project
+        tests:
+          - unique
+          - not_null
+      
+      - name: project_name
+        description: Name of the project
+        tests:
+          - not_null
+      
+      - name: client_name
+        description: Name of the client organization
+        tests:
+          - not_null
+      
+      - name: industry
+        description: Client's industry sector
+        tests:
+          - not_null
+      
+      - name: start_date
+        description: Project start date
+        tests:
+          - not_null
+      
+      - name: end_date
+        description: Planned or actual project end date
+      
+      - name: project_status
+        description: Current status of the project
+        tests:
+          - not_null
+      
+      - name: total_budget
+        description: Total project budget
+        tests:
+          - not_null
+
+  - name: sales_transactions
+    description: Individual sales transactions for products/services
+    config:
+      schema: dbo
+    columns:
+      - name: transaction_id
+        description: Unique identifier for each transaction
+        tests:
+          - unique
+          - not_null
+      
+      - name: transaction_date
+        description: Date of the transaction
+        tests:
+          - not_null
+      
+      - name: project_id
+        description: Associated project ID
+        tests:
+          - not_null
+          - relationships:
+              to: ref('sales_projects')
+              field: project_id
+      
+      - name: product_id
+        description: Product/service sold
+        tests:
+          - not_null
+          - relationships:
+              to: ref('sales_products')
+              field: product_id
+      
+      - name: sales_rep_id
+        description: Sales representative who closed the deal
+        tests:
+          - not_null
+          - relationships:
+              to: ref('sales_reps')
+              field: sales_rep_id
+      
+      - name: quantity
+        description: Number of units sold
+        tests:
+          - not_null
+      
+      - name: unit_price
+        description: Price per unit for this transaction
+        tests:
+          - not_null
+      
+      - name: discount_percent
+        description: Discount percentage applied
+        tests:
+          - not_null
+      
+      - name: tax_amount
+        description: Tax amount charged
+        tests:
+          - not_null

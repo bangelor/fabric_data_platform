@@ -45,3 +45,196 @@ models:
       
       - name: _loaded_at
         description: Timestamp when the record was loaded into bronze layer
+
+  - name: brz_sales__products
+    description: Bronze layer for sales products - engineering company product catalog
+    columns:
+      - name: product_id
+        description: Unique identifier for each product
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_name
+        description: Name of the product or service
+        tests:
+          - not_null
+      
+      - name: product_category
+        description: Product category classification
+        tests:
+          - not_null
+      
+      - name: unit_price
+        description: Standard selling price per unit
+        tests:
+          - not_null
+      
+      - name: cost_per_unit
+        description: Cost to deliver per unit
+        tests:
+          - not_null
+      
+      - name: is_active
+        description: Product availability flag (1=active, 0=inactive)
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      
+      - name: _loaded_at
+        description: Timestamp when the record was loaded into bronze layer
+
+  - name: brz_sales__reps
+    description: Bronze layer for sales representatives
+    columns:
+      - name: sales_rep_id
+        description: Unique identifier for each sales rep
+        tests:
+          - unique
+          - not_null
+      
+      - name: first_name
+        description: Sales rep first name
+        tests:
+          - not_null
+      
+      - name: last_name
+        description: Sales rep last name
+        tests:
+          - not_null
+      
+      - name: full_name
+        description: Concatenated full name
+        tests:
+          - not_null
+      
+      - name: email
+        description: Sales rep email address
+        tests:
+          - not_null
+          - unique
+      
+      - name: region
+        description: Geographic sales region
+        tests:
+          - not_null
+      
+      - name: hire_date
+        description: Date when sales rep was hired
+        tests:
+          - not_null
+      
+      - name: status
+        description: Employment status
+        tests:
+          - not_null
+      
+      - name: _loaded_at
+        description: Timestamp when the record was loaded into bronze layer
+
+  - name: brz_sales__projects
+    description: Bronze layer for client projects
+    columns:
+      - name: project_id
+        description: Unique identifier for each project
+        tests:
+          - unique
+          - not_null
+      
+      - name: project_name
+        description: Name of the project
+        tests:
+          - not_null
+      
+      - name: client_name
+        description: Client organization name
+        tests:
+          - not_null
+      
+      - name: industry
+        description: Client industry sector
+        tests:
+          - not_null
+      
+      - name: start_date
+        description: Project start date
+        tests:
+          - not_null
+      
+      - name: end_date
+        description: Project end date
+      
+      - name: project_status
+        description: Current project status
+        tests:
+          - not_null
+      
+      - name: total_budget
+        description: Total project budget
+        tests:
+          - not_null
+      
+      - name: _loaded_at
+        description: Timestamp when the record was loaded into bronze layer
+
+  - name: brz_sales__transactions
+    description: Bronze layer for sales transactions
+    columns:
+      - name: transaction_id
+        description: Unique identifier for each transaction
+        tests:
+          - unique
+          - not_null
+      
+      - name: project_id
+        description: Foreign key to projects
+        tests:
+          - not_null
+          - relationships:
+              to: ref('brz_sales__projects')
+              field: project_id
+      
+      - name: product_id
+        description: Foreign key to products
+        tests:
+          - not_null
+          - relationships:
+              to: ref('brz_sales__products')
+              field: product_id
+      
+      - name: sales_rep_id
+        description: Foreign key to sales reps
+        tests:
+          - not_null
+          - relationships:
+              to: ref('brz_sales__reps')
+              field: sales_rep_id
+      
+      - name: transaction_date
+        description: Date of the transaction
+        tests:
+          - not_null
+      
+      - name: quantity
+        description: Number of units sold
+        tests:
+          - not_null
+      
+      - name: unit_price
+        description: Price per unit
+        tests:
+          - not_null
+      
+      - name: discount_percent
+        description: Discount percentage applied
+        tests:
+          - not_null
+      
+      - name: tax_amount
+        description: Tax amount charged
+        tests:
+          - not_null
+      
+      - name: _loaded_at
+        description: Timestamp when the record was loaded into bronze layer

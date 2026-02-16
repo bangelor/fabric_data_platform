@@ -103,3 +103,242 @@ models:
         description: Timestamp when the source data was loaded
         tests:
           - not_null
+
+  - name: dim_products
+    description: Product dimension table (Kimball SCD Type 1) - Engineering company product catalog
+    columns:
+      - name: product_key
+        description: Surrogate key for the product dimension
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_id
+        description: Natural key - unique product identifier
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_name
+        description: Name of the product or service
+        tests:
+          - not_null
+      
+      - name: product_category
+        description: Product category classification
+        tests:
+          - not_null
+      
+      - name: unit_price
+        description: Standard selling price per unit
+        tests:
+          - not_null
+      
+      - name: cost_per_unit
+        description: Cost to deliver per unit
+        tests:
+          - not_null
+      
+      - name: gross_margin_per_unit
+        description: Profit margin per unit (unit_price - cost_per_unit)
+        tests:
+          - not_null
+      
+      - name: margin_percentage
+        description: Profit margin percentage
+        tests:
+          - not_null
+      
+      - name: is_active
+        description: Product availability flag
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      
+      - name: is_current
+        description: SCD flag indicating current record
+        tests:
+          - not_null
+
+  - name: dim_sales_reps
+    description: Sales representative dimension table (Kimball SCD Type 1)
+    columns:
+      - name: sales_rep_key
+        description: Surrogate key for the sales rep dimension
+        tests:
+          - unique
+          - not_null
+      
+      - name: sales_rep_id
+        description: Natural key - unique sales rep identifier
+        tests:
+          - unique
+          - not_null
+      
+      - name: full_name
+        description: Full name of the sales representative
+        tests:
+          - not_null
+      
+      - name: email
+        description: Sales rep email address
+        tests:
+          - not_null
+          - unique
+      
+      - name: region
+        description: Geographic sales region
+        tests:
+          - not_null
+      
+      - name: status
+        description: Employment status
+        tests:
+          - not_null
+      
+      - name: is_current
+        description: SCD flag indicating current record
+        tests:
+          - not_null
+
+  - name: dim_projects
+    description: Project dimension table (Kimball SCD Type 1) - Client projects and engagements
+    columns:
+      - name: project_key
+        description: Surrogate key for the project dimension
+        tests:
+          - unique
+          - not_null
+      
+      - name: project_id
+        description: Natural key - unique project identifier
+        tests:
+          - unique
+          - not_null
+      
+      - name: project_name
+        description: Name of the project
+        tests:
+          - not_null
+      
+      - name: client_name
+        description: Client organization name
+        tests:
+          - not_null
+      
+      - name: industry
+        description: Client industry sector
+        tests:
+          - not_null
+      
+      - name: project_status
+        description: Current project status
+        tests:
+          - not_null
+      
+      - name: total_budget
+        description: Total project budget
+        tests:
+          - not_null
+      
+      - name: is_current
+        description: SCD flag indicating current record
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: Date dimension table (Kimball methodology) - Comprehensive date attributes for time-based analysis
+    columns:
+      - name: date_key
+        description: Surrogate key in YYYYMMDD format
+        tests:
+          - unique
+          - not_null
+      
+      - name: date_value
+        description: Actual date value
+        tests:
+          - unique
+          - not_null
+      
+      - name: day_of_month
+        description: Day of the month (1-31)
+        tests:
+          - not_null
+      
+      - name: month_number
+        description: Month number (1-12)
+        tests:
+          - not_null
+      
+      - name: quarter_number
+        description: Quarter number (1-4)
+        tests:
+          - not_null
+      
+      - name: year_number
+        description: Year number
+        tests:
+          - not_null
+
+  - name: fact_sales
+    description: Sales transaction fact table (Kimball methodology) - Detailed sales transactions with calculated measures
+    columns:
+      - name: sales_transaction_key
+        description: Primary key for the fact table
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_key
+        description: Foreign key to dim_products
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_key
+      
+      - name: sales_rep_key
+        description: Foreign key to dim_sales_reps
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_sales_reps')
+              field: sales_rep_key
+      
+      - name: project_key
+        description: Foreign key to dim_projects
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_projects')
+              field: project_key
+      
+      - name: date_key
+        description: Foreign key to dim_date
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      
+      - name: quantity
+        description: Number of units sold
+        tests:
+          - not_null
+      
+      - name: gross_amount
+        description: Gross sales amount before discounts
+        tests:
+          - not_null
+      
+      - name: net_amount
+        description: Net sales amount after discounts, before tax
+        tests:
+          - not_null
+      
+      - name: total_amount
+        description: Total sales amount including tax
+        tests:
+          - not_null

@@ -1,0 +1,9 @@
+sales_rep_id,first_name,last_name,email,region,hire_date,status
+1,John,Anderson,john.anderson@engco.com,North America,2020-03-15,active
+2,Sarah,Mitchell,sarah.mitchell@engco.com,Europe,2019-06-20,active
+3,Michael,Chen,michael.chen@engco.com,Asia Pacific,2021-01-10,active
+4,Emma,Rodriguez,emma.rodriguez@engco.com,Latin America,2020-11-05,active
+5,David,Thompson,david.thompson@engco.com,North America,2018-08-12,active
+6,Lisa,Wang,lisa.wang@engco.com,Asia Pacific,2022-02-28,active
+7,Robert,Brown,robert.brown@engco.com,Europe,2019-12-01,active
+8,Jennifer,Garcia,jennifer.garcia@engco.com,North America,2021-07-15,active
