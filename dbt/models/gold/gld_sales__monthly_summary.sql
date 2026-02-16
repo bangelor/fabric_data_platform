@@ -54,7 +54,7 @@ monthly_sales as (
         sum(f.net_amount) - sum(f.quantity * p.cost_per_unit) as total_gross_profit,
         case 
             when sum(f.net_amount) > 0 
-            then round((sum(f.net_amount) - sum(f.quantity * p.cost_per_unit)) / sum(f.net_revenue) * 100, 2)
+            then round((sum(f.net_amount) - sum(f.quantity * p.cost_per_unit)) / sum(f.net_amount) * 100, 2)
             else 0
         end as profit_margin_percentage
         
