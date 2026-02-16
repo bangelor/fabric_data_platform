@@ -124,3 +124,220 @@ models:
         description: Timestamp when the gold table was last transformed
         tests:
           - not_null
+
+  - name: gld_sales__product_performance
+    description: |
+      **CERTIFIED GOLD** Product performance analytics with sales, revenue, and profitability metrics.
+      Business-ready table for product analysis and reporting.
+    columns:
+      - name: product_key
+        description: Product surrogate key
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_name
+        description: Name of the product or service
+        tests:
+          - not_null
+      
+      - name: product_category
+        description: Product category
+        tests:
+          - not_null
+      
+      - name: total_transactions
+        description: Total number of transactions for this product
+        tests:
+          - not_null
+      
+      - name: total_units_sold
+        description: Total units sold
+        tests:
+          - not_null
+      
+      - name: total_net_revenue
+        description: Total net revenue (after discounts)
+        tests:
+          - not_null
+      
+      - name: total_gross_profit
+        description: Total gross profit (revenue - cost)
+        tests:
+          - not_null
+      
+      - name: profit_margin_percentage
+        description: Profit margin as a percentage
+        tests:
+          - not_null
+      
+      - name: revenue_rank
+        description: Revenue ranking among all products
+        tests:
+          - not_null
+      
+      - name: transformed_at
+        description: Timestamp when the gold table was last transformed
+        tests:
+          - not_null
+
+  - name: gld_sales__rep_performance
+    description: |
+      **CERTIFIED GOLD** Sales representative performance analytics.
+      Business-ready table for sales team analysis and commission calculations.
+    columns:
+      - name: sales_rep_key
+        description: Sales rep surrogate key
+        tests:
+          - unique
+          - not_null
+      
+      - name: sales_rep_name
+        description: Full name of the sales representative
+        tests:
+          - not_null
+      
+      - name: region
+        description: Sales region
+        tests:
+          - not_null
+      
+      - name: total_transactions
+        description: Total number of transactions closed
+        tests:
+          - not_null
+      
+      - name: total_net_revenue
+        description: Total net revenue generated
+        tests:
+          - not_null
+      
+      - name: total_gross_profit
+        description: Total gross profit generated
+        tests:
+          - not_null
+      
+      - name: performance_tier
+        description: Performance classification tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Top Performer', 'High Performer', 'Average Performer', 'Developing']
+      
+      - name: revenue_rank
+        description: Revenue ranking among all sales reps
+        tests:
+          - not_null
+      
+      - name: transformed_at
+        description: Timestamp when the gold table was last transformed
+        tests:
+          - not_null
+
+  - name: gld_sales__project_profitability
+    description: |
+      **CERTIFIED GOLD** Project profitability analytics with budget tracking.
+      Business-ready table for project financial analysis and client reporting.
+    columns:
+      - name: project_key
+        description: Project surrogate key
+        tests:
+          - unique
+          - not_null
+      
+      - name: project_name
+        description: Name of the project
+        tests:
+          - not_null
+      
+      - name: client_name
+        description: Client organization name
+        tests:
+          - not_null
+      
+      - name: industry
+        description: Client industry sector
+        tests:
+          - not_null
+      
+      - name: total_budget
+        description: Total project budget
+        tests:
+          - not_null
+      
+      - name: total_net_revenue
+        description: Total net revenue from project
+        tests:
+          - not_null
+      
+      - name: total_gross_profit
+        description: Total gross profit from project
+        tests:
+          - not_null
+      
+      - name: budget_utilization_percentage
+        description: Percentage of budget utilized
+        tests:
+          - not_null
+      
+      - name: profitability_tier
+        description: Profitability classification
+        tests:
+          - not_null
+      
+      - name: transformed_at
+        description: Timestamp when the gold table was last transformed
+        tests:
+          - not_null
+
+  - name: gld_sales__monthly_summary
+    description: |
+      **CERTIFIED GOLD** Monthly sales summary for executive reporting and trend analysis.
+      Includes month-over-month and year-over-year growth metrics.
+    columns:
+      - name: year_number
+        description: Year number
+        tests:
+          - not_null
+      
+      - name: month_number
+        description: Month number (1-12)
+        tests:
+          - not_null
+      
+      - name: year_month
+        description: Year-month in YYYY-MM format
+        tests:
+          - unique
+          - not_null
+      
+      - name: total_transactions
+        description: Total transactions in the month
+        tests:
+          - not_null
+      
+      - name: total_net_revenue
+        description: Total net revenue for the month
+        tests:
+          - not_null
+      
+      - name: total_gross_profit
+        description: Total gross profit for the month
+        tests:
+          - not_null
+      
+      - name: mom_revenue_growth_percent
+        description: Month-over-month revenue growth percentage
+      
+      - name: yoy_revenue_growth_percent
+        description: Year-over-year revenue growth percentage
+      
+      - name: ytd_revenue
+        description: Year-to-date cumulative revenue
+        tests:
+          - not_null
+      
+      - name: transformed_at
+        description: Timestamp when the gold table was last transformed
+        tests:
+          - not_null
