@@ -3,7 +3,7 @@
 # ==============================================================================
 
 locals {
-  env_label = title(var.environment)
+  env_label   = title(var.environment)
   name_prefix = "acc_fabric"
 }
 
