@@ -79,6 +79,7 @@ resource "terraform_data" "warehouse_schemas" {
   ]
 
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     command = <<-EOT
       set -euo pipefail
 
