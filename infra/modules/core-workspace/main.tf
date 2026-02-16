@@ -79,7 +79,8 @@ resource "terraform_data" "warehouse_schemas" {
   ]
 
   provisioner "local-exec" {
-    command = <<-EOT
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
       set -euo pipefail
 
       MAX_RETRIES=5
