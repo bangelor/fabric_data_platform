@@ -72,7 +72,7 @@ monthly_sales as (
         d.year_month
 ),
 
-with_growth as (
+monthly_with_growth_metrics as (
     select
         *,
         -- Month-over-month growth
@@ -108,7 +108,7 @@ final as (
         -- Metadata
         CAST(SYSDATETIME() AS datetime2(6)) as transformed_at
         
-    from with_growth
+    from monthly_with_growth_metrics
 )
 
 select * from final

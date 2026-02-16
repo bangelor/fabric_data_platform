@@ -53,11 +53,8 @@ dim_date as (
         year(date_day) as year_number,
         cast(year(date_day) as varchar) as year_name,
         
-        -- Fiscal year (assuming fiscal year starts in January)
-        case
-            when month(date_day) >= 1 then year(date_day)
-            else year(date_day) - 1
-        end as fiscal_year,
+        -- Fiscal year (same as calendar year in this implementation)
+        year(date_day) as fiscal_year,
         
         -- First/last day flags
         case when day(date_day) = 1 then 1 else 0 end as is_first_day_of_month,
