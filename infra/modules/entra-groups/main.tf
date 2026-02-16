@@ -8,9 +8,9 @@ resource "azuread_group" "platform_admins" {
   description      = "Fabric tenant administrators - operate the platform and manage all workspaces"
   security_enabled = true
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 resource "azuread_group" "cicd_approvers" {
@@ -20,9 +20,9 @@ resource "azuread_group" "cicd_approvers" {
   description      = "Approve CI/CD deployments to production"
   security_enabled = true
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # Core Workspace Groups (only for current environment)
