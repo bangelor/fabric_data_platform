@@ -15,11 +15,6 @@ variable "capacity_id" {
   type        = string
 }
 
-variable "platform_admin_id" {
-  description = "Object ID of the Platform Admin security group"
-  type        = string
-}
-
 variable "core_workspace_id" {
   description = "ID of the core workspace for shortcut source"
   type        = string
