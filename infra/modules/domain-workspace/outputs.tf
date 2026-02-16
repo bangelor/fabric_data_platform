@@ -22,10 +22,10 @@ output "lakehouse_name" {
 
 output "warehouse_gold_shortcut_id" {
   description = "ID of the shortcut to core warehouse gold schema"
-  value       = fabric_shortcut.warehouse_gold.id
+  value       = fabric_shortcut.core_gold.id
 }
 
 output "warehouse_gold_shortcut_path" {
   description = "Path of the shortcut to core warehouse gold schema"
-  value       = fabric_shortcut.warehouse_gold.path
+  value       = fabric_shortcut.core_gold.path
 }

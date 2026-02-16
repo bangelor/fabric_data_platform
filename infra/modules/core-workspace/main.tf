@@ -1,17 +1,28 @@
-# Core Workspace Module - Simplified
+# ==============================================================================
+# Core Workspace Module - Acc Fabric Data Platform
+# ==============================================================================
 
-# Fabric Workspace for core data platform
+locals {
+  env_label   = title(var.environment)
+  name_prefix = "acc_fabric"
+}
+
+# ------------------------------------------------------------------------------
+# Workspace
+# ------------------------------------------------------------------------------
 resource "fabric_workspace" "core" {
-  display_name = var.workspace_name
-  description  = "Core Fabric workspace - ${title(var.environment)} environment"
+  display_name = "${local.name_prefix}_ws_core_${var.environment}"
+  description  = "Core data platform workspace – ${local.env_label}"
   capacity_id  = var.capacity_id
 
   # lifecycle {
-  #   prevent_destroy = true
+  #   prevent_destroy = true  # Uncomment once stable
   # }
 }
 
-# Assign Admin security group as Workspace Admin
+# ------------------------------------------------------------------------------
+# Role Assignments (no Viewer role by design)
+# ------------------------------------------------------------------------------
 resource "fabric_workspace_role_assignment" "admin" {
   workspace_id = fabric_workspace.core.id
   principal = {
@@ -21,7 +32,6 @@ resource "fabric_workspace_role_assignment" "admin" {
   role = "Admin"
 }
 
-# Assign Contributor security group as Workspace Contributor
 resource "fabric_workspace_role_assignment" "contributor" {
   workspace_id = fabric_workspace.core.id
   principal = {
@@ -31,38 +41,38 @@ resource "fabric_workspace_role_assignment" "contributor" {
   role = "Contributor"
 }
 
-# Lakehouse for core workspace
+# ------------------------------------------------------------------------------
+# Lakehouse
+# ------------------------------------------------------------------------------
 resource "fabric_lakehouse" "core" {
-  display_name = "core_lakehouse_${var.environment}"
-  description  = "Core lakehouse for ${var.environment} environment"
+  display_name = "${local.name_prefix}_lh_core_${var.environment}"
+  description  = "Core lakehouse – ${local.env_label}"
   workspace_id = fabric_workspace.core.id
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
 }
 
-# Warehouse for core workspace
+# ------------------------------------------------------------------------------
+# Warehouse
+# ------------------------------------------------------------------------------
 resource "fabric_warehouse" "core" {
-  display_name = "core_warehouse_${var.environment}"
-  description  = "Core warehouse for ${var.environment} environment"
+  display_name = "${local.name_prefix}_wh_core_${var.environment}"
+  description  = "Core warehouse – ${local.env_label}"
   workspace_id = fabric_workspace.core.id
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
 }
 
-# Variable Library for deployment pipelines
-# Note: Created empty - variables must be added via Fabric UI after creation
-# The JSON structure validation is strict and requires specific Fabric format
+# ------------------------------------------------------------------------------
+# Variable Library (for deployment pipelines)
+# Note: Created empty – variables are managed via Fabric UI post-creation
+# ------------------------------------------------------------------------------
 resource "fabric_variable_library" "deployment" {
-  display_name = "deployment_variables_${var.environment}"
-  description  = "Variable library for Fabric deployment pipelines - ${title(var.environment)} environment"
+  display_name = "${local.name_prefix}_vl_deploy_${var.environment}"
+  description  = "Deployment pipeline variables – ${local.env_label}"
   workspace_id = fabric_workspace.core.id
 }
 
-# Create bronze, silver, gold schemas in warehouse
+# ------------------------------------------------------------------------------
+# Medallion Schemas (bootstrap only – Terraform won't detect manual drift)
+# Placeholder tables prevent Fabric from dropping empty schemas.
+# ------------------------------------------------------------------------------
 resource "terraform_data" "warehouse_schemas" {
   triggers_replace = [
     fabric_warehouse.core.id
@@ -70,30 +80,42 @@ resource "terraform_data" "warehouse_schemas" {
 
   provisioner "local-exec" {
     command = <<-EOT
+      set -euo pipefail
+
       MAX_RETRIES=5
       RETRY=0
-      TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
 
       until [ $RETRY -ge $MAX_RETRIES ]; do
+        # Fetch token inside loop – tokens expire after ~5 min
+        export SQLCMDPASSWORD=$(az account get-access-token \
+          --resource https://database.windows.net/ \
+          --query accessToken -o tsv 2>/dev/null)
+
+        if [ -z "$SQLCMDPASSWORD" ]; then
+          echo "ERROR: Failed to acquire SQL access token. Is az CLI authenticated?"
+          exit 1
+        fi
+
         sqlcmd \
           -S "${fabric_warehouse.core.properties.connection_string}" \
           -d "${fabric_warehouse.core.display_name}" \
-          -G -P "$TOKEN" \
+          -G \
           -Q "
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='bronze') EXEC('CREATE SCHEMA bronze');
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='silver') EXEC('CREATE SCHEMA silver');
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='gold') EXEC('CREATE SCHEMA gold');
+            -- Placeholder tables: Fabric drops empty schemas; these prevent that
             IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='bronze' AND TABLE_NAME='_placeholder') CREATE TABLE bronze._placeholder (id INT);
             IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='silver' AND TABLE_NAME='_placeholder') CREATE TABLE silver._placeholder (id INT);
             IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='gold' AND TABLE_NAME='_placeholder') CREATE TABLE gold._placeholder (id INT);
-          " && echo "Schemas and placeholder tables created successfully." && exit 0
+          " && echo "Schemas created successfully." && exit 0
 
         RETRY=$((RETRY+1))
-        echo "Attempt $RETRY failed, retrying in $((10*RETRY))s..."
+        echo "Attempt $RETRY/$MAX_RETRIES failed. Retrying in $((10*RETRY))s..."
         sleep $((10*RETRY))
       done
 
-      echo "Failed after $MAX_RETRIES attempts."
+      echo "FAILED: Schema creation failed after $MAX_RETRIES attempts."
       exit 1
     EOT
   }

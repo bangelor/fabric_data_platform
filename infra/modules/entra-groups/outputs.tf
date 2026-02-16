@@ -24,14 +24,14 @@ output "core_contributors_id" {
 output "business_admins_ids" {
   description = "Map of Business Admin group IDs by domain"
   value = {
-    for domain, group in azuread_group.business_admins : domain => group.id
+    for domain, group in azuread_group.biz_admins : domain => group.id
   }
 }
 
 output "business_contributors_ids" {
   description = "Map of Business Contributor group IDs by domain"
   value = {
-    for domain, group in azuread_group.business_contributors : domain => group.id
+    for domain, group in azuread_group.biz_contributors : domain => group.id
   }
 }
 
@@ -39,11 +39,11 @@ output "business_contributors_ids" {
 output "app_viewers_domain_ids" {
   description = "Map of App Viewer group IDs by domain"
   value = {
-    for domain, group in azuread_group.app_viewers_domain : domain => group.id
+    for domain, group in azuread_group.aud_domain : domain => group.id
   }
 }
 
 output "app_viewers_org_id" {
   description = "Object ID of Organization-wide App Viewers group"
-  value       = length(azuread_group.app_viewers_org) > 0 ? azuread_group.app_viewers_org[0].id : null
+  value       = length(azuread_group.aud_org) > 0 ? azuread_group.aud_org[0].id : null
 }

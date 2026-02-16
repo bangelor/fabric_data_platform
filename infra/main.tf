@@ -24,11 +24,13 @@ module "domain_workspace" {
   source   = "./modules/domain-workspace"
   for_each = var.environment == "prod" ? toset(var.business_domains) : []
 
-  workspace_name      = "fabric-${each.value}-${var.environment}"
-  domain_name         = each.value
-  capacity_id         = var.fabric_capacity_id
-  platform_admin_id   = module.entra_groups.platform_admins_id
-  core_workspace_id   = module.core_workspace.workspace_id
-  core_warehouse_id   = module.core_workspace.warehouse_id
-  core_warehouse_name = module.core_workspace.warehouse_name
+  workspace_name              = "fabric-${each.value}-${var.environment}"
+  domain_name                 = each.value
+  capacity_id                 = var.fabric_capacity_id
+  platform_admin_group_id     = module.entra_groups.platform_admins_id
+  domain_admin_group_id       = module.entra_groups.business_admins_ids[each.value]
+  domain_contributor_group_id = module.entra_groups.business_contributors_ids[each.value]
+  core_workspace_id           = module.core_workspace.workspace_id
+  core_warehouse_id           = module.core_workspace.warehouse_id
+  core_warehouse_name         = module.core_workspace.warehouse_name
 }
