@@ -5,7 +5,7 @@ fabric_data_platform:
   outputs:
     dev:
       type: fabric
-      driver: 'ODBC Driver 18 for SQL Server'
+      driver: 'ODBC Driver 17 for SQL Server'
       server: yxe6ecc263mezdjvuarhfykc2y-ksnb7qqzd4iufenweci5kyijy4.datawarehouse.fabric.microsoft.com
       port: 1433
       database: core_warehouse_dev
